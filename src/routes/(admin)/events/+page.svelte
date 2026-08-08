@@ -79,7 +79,7 @@
 			<h1 class="text-2xl font-bold text-(--text-primary)">Eventos</h1>
 			<p class="text-(--text-secondary) mt-1 text-sm">Gestión completa de eventos de FamiPass</p>
 		</div>
-		<a href="/events/new">
+		<a href="/events/form">
 			<Button variant="primary">
 				<CalendarPlus size={16} />
 				Nuevo Evento
@@ -95,9 +95,9 @@
 			<button
 				onclick={() => { filterStatus = opt.value; }}
 				class="px-3 py-1.5 rounded-lg text-xs font-medium transition-all duration-200
-				       {filterStatus === opt.value
-				           ? 'bg-(--accent) text-(--accent-text) shadow-sm'
-				           : 'bg-(--bg-surface-2) text-(--text-secondary) hover:text-(--accent) hover:bg-(--accent-muted)'}"
+                    {filterStatus === opt.value
+                        ? 'bg-(--accent) text-(--accent-text) shadow-sm'
+                        : 'bg-(--bg-surface-2) text-(--text-secondary) hover:text-(--accent) hover:bg-(--accent-muted)'}"
 			>
 				{opt.label}
 			</button>
