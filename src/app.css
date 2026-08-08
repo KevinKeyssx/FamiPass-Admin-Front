@@ -1,0 +1,220 @@
+@import 'tailwindcss';
+
+/* ─────────────────────────────────────────────────────────────────────────
+   FamiPass Design System - Custom Theme Extensions (Tailwind v4)
+───────────────────────────────────────────────────────────────────────── */
+@theme {
+    --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
+
+    /* Primitivos Cálipso */
+    --color-calypso-50: #e0f7fa;
+    --color-calypso-100: #b2ebf2;
+    --color-calypso-200: #80deea;
+    --color-calypso-300: #4dd0e1;
+    --color-calypso-400: #26c6da;
+    --color-calypso-500: #00B4D8;
+    --color-calypso-600: #0097B5;
+    --color-calypso-700: #0077A8;
+    --color-calypso-800: #006494;
+    --color-calypso-900: #004d75;
+
+    /* Primitivos Dorado */
+    --color-gold-300: #fcd34d;
+    --color-gold-400: #fbbf24;
+    --color-gold-500: #F59E0B;
+    --color-gold-600: #D97706;
+    --color-gold-700: #B45309;
+
+    /* Primitivos Navy */
+    --color-navy-700: #254d72;
+    --color-navy-800: #1e3a55;
+    --color-navy-900: #1A2C42;
+    --color-navy-950: #0D1B2A;
+}
+
+:root {
+    /* ── Primitivos Neutros ── */
+    --slate-50 : #f8fafc;
+    --slate-100: #f1f5f9;
+    --slate-200: #e2e8f0;
+    --slate-300: #cbd5e1;
+    --slate-400: #94a3b8;
+    --slate-500: #64748b;
+    --slate-600: #475569;
+    --slate-700: #334155;
+    --slate-800: #1e293b;
+    --slate-900: #0f172a;
+}
+
+/* ── Tokens Light (default) ── */
+html, html.light {
+    --bg-base        : #ffffff;
+    --bg-surface     : var( --slate-50 );
+    --bg-surface-2   : var( --slate-100 );
+    --bg-sidebar     : rgba( 255, 255, 255, 0.85 );
+
+    --text-primary   : var( --slate-800 );
+    --text-secondary : var( --slate-500 );
+    --text-muted     : var( --slate-400 );
+    --text-inverted  : #ffffff;
+
+    --border         : var( --slate-200 );
+    --border-focus   : var( --color-calypso-500 );
+
+    --accent         : var( --color-calypso-500 );
+    --accent-hover   : var( --color-calypso-600 );
+    --accent-muted   : var( --color-calypso-50 );
+    --accent-text    : #ffffff;
+
+    --shadow-sm  : 0 1px 3px rgba( 0, 0, 0, 0.08 ), 0 1px 2px rgba( 0, 0, 0, 0.04 );
+    --shadow-md  : 0 4px 6px rgba( 0, 0, 0, 0.07 ), 0 2px 4px rgba( 0, 0, 0, 0.04 );
+    --shadow-lg  : 0 10px 24px rgba( 0, 0, 0, 0.1 ), 0 4px 8px rgba( 0, 0, 0, 0.06 );
+    --shadow-glow: 0 0 20px rgba( 0, 180, 216, 0.25 );
+}
+
+/* ── Tokens Dark ── */
+html.dark {
+    --bg-base        : var( --color-navy-950 );
+    --bg-surface     : var( --color-navy-900 );
+    --bg-surface-2   : var( --color-navy-800 );
+    --bg-sidebar     : rgba( 13, 27, 42, 0.9 );
+
+    --text-primary   : var( --slate-100 );
+    --text-secondary : var( --slate-400 );
+    --text-muted     : var( --slate-600 );
+    --text-inverted  : var( --color-navy-950 );
+
+    --border         : var( --color-navy-700 );
+    --border-focus   : var( --color-gold-500 );
+
+    --accent         : var( --color-gold-500 );
+    --accent-hover   : var( --color-gold-400 );
+    --accent-muted   : rgba( 245, 158, 11, 0.12 );
+    --accent-text    : var( --color-navy-950 );
+
+    --shadow-sm  : 0 1px 3px rgba( 0, 0, 0, 0.4 ),  0 1px 2px rgba( 0, 0, 0, 0.3 );
+    --shadow-md  : 0 4px 6px rgba( 0, 0, 0, 0.35 ), 0 2px 4px rgba( 0, 0, 0, 0.25 );
+    --shadow-lg  : 0 10px 24px rgba( 0, 0, 0, 0.5 ), 0 4px 8px rgba( 0, 0, 0, 0.35 );
+    --shadow-glow: 0 0 20px rgba( 245, 158, 11, 0.3 );
+}
+
+/* ─────────────────────────────────────────────────────────────────────────
+   Base Defaults
+───────────────────────────────────────────────────────────────────────── */
+html {
+    font-family             : var( --font-sans );
+    font-size               : 16px;
+    -webkit-font-smoothing  : antialiased;
+    -moz-osx-font-smoothing : grayscale;
+    scroll-behavior         : smooth;
+}
+
+body {
+    background-color: var( --bg-base );
+    color           : var( --text-primary );
+    min-height      : 100vh;
+}
+
+/* ─────────────────────────────────────────────────────────────────────────
+   Scrollbar personalizado
+───────────────────────────────────────────────────────────────────────── */
+::-webkit-scrollbar {
+    width : 6px;
+    height: 6px;
+}
+
+::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+    background   : var( --border );
+    border-radius: 9999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: var( --text-muted );
+}
+
+/* ─────────────────────────────────────────────────────────────────────────
+   Utilidades globales
+───────────────────────────────────────────────────────────────────────── */
+.card {
+    background   : var( --bg-surface );
+    border       : 1px solid var( --border );
+    border-radius: 12px;
+    box-shadow   : var( --shadow-sm );
+    transition   : box-shadow 0.2s ease, transform 0.2s ease;
+}
+
+.card:hover {
+    box-shadow: var( --shadow-md );
+}
+
+.glass {
+    background   : var( --bg-sidebar );
+    backdrop-filter   : blur( 16px );
+    -webkit-backdrop-filter: blur( 16px );
+    border-bottom: 1px solid var( --border );
+}
+
+.focus-ring:focus-visible {
+    outline       : 2px solid var( --accent );
+    outline-offset: 2px;
+}
+
+/* ─────────────────────────────────────────────────────────────────────────
+   Status colors (EventStatus / OrderStatus)
+───────────────────────────────────────────────────────────────────────── */
+.status-draft       { --status-bg: #e2e8f0; --status-text: #475569; }
+.status-in-progress { --status-bg: rgba( 0, 180, 216, 0.15 ); --status-text: var( --color-calypso-700 ); }
+.status-finished    { --status-bg: #d1fae5; --status-text: #065f46; }
+.status-cancelled   { --status-bg: #fee2e2; --status-text: #991b1b; }
+.status-pending     { --status-bg: #fef3c7; --status-text: #92400e; }
+.status-completed   { --status-bg: #d1fae5; --status-text: #065f46; }
+
+html.dark .status-draft       { --status-bg: rgba( 148, 163, 184, 0.15 ); --status-text: var( --slate-400 ); }
+html.dark .status-in-progress { --status-bg: rgba( 0, 180, 216, 0.2 );   --status-text: var( --color-calypso-300 ); }
+html.dark .status-finished    { --status-bg: rgba( 52, 211, 153, 0.15 );  --status-text: #6ee7b7; }
+html.dark .status-cancelled   { --status-bg: rgba( 248, 113, 113, 0.15 ); --status-text: #fca5a5; }
+html.dark .status-pending     { --status-bg: rgba( 251, 191, 36, 0.15 );  --status-text: var( --color-gold-400 ); }
+html.dark .status-completed   { --status-bg: rgba( 52, 211, 153, 0.15 );  --status-text: #6ee7b7; }
+
+/* ─────────────────────────────────────────────────────────────────────────
+   Login View Custom Layout & Paddings
+───────────────────────────────────────────────────────────────────────── */
+.login-container {
+	display         : flex;
+	align-items     : center;
+	justify-content : center;
+	min-height      : 100vh;
+	padding         : 1rem;
+	background      : var( --bg-base );
+	position        : relative;
+	overflow        : hidden;
+}
+
+.login-card {
+	width           : 100%;
+	max-width       : 28rem;
+	padding         : 2.5rem;
+}
+
+@media ( max-width: 640px ) {
+	.login-card {
+		padding     : 2rem;
+	}
+}
+
+.login-btn {
+	width           : 100%;
+	display         : flex;
+	align-items     : center;
+	justify-content : center;
+	gap             : 0.75rem;
+	padding         : 0.875rem 1.5rem;
+	border-radius   : 0.75rem;
+	font-weight     : 500;
+	font-size       : 0.875rem;
+	transition      : all 0.2s ease;
+}
