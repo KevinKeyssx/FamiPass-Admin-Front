@@ -27,19 +27,22 @@
 	tabindex="0"
 	role="checkbox"
 	aria-checked={ checked }
-	class="flex items-center justify-between gap-4 p-3 rounded-xl transition-all duration-300 border text-left
-	       bg-(--bg-surface-2) border-(--border) hover:border-(--accent) cursor-pointer select-none
-	       focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-(--accent)/20"
+	class="flex items-center justify-between gap-4 p-4 rounded-xl transition-all duration-300 border text-left cursor-pointer select-none
+	       focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-accent/10
+	       { checked
+	           ? 'bg-accent-muted/30 border-accent'
+	           : 'bg-bg-surface-2 border-border hover:border-accent/40' }
+	       { disabled ? 'opacity-50 cursor-not-allowed' : '' }"
 >
 	<div class="flex flex-col gap-0.5">
-		<span class="text-sm font-medium text-(--text-primary)">
+		<span class="text-sm font-semibold transition-colors duration-200 text-text-primary">
 			{ label }
 			{#if required}
-				<span class="text-red-500">*</span>
+				<span class="text-accent">*</span>
 			{/if}
 		</span>
 		{#if description}
-			<p class="text-xs text-(--text-muted)">{ description }</p>
+			<p class="text-xs text-text-secondary">{ description }</p>
 		{/if}
 	</div>
 
@@ -48,13 +51,15 @@
 		{ disabled }
 		{ required }
 		{ id }
-		class="w-5 h-5 rounded-lg border border-(--border) flex items-center justify-center transition-all duration-200 cursor-pointer
-		       bg-(--bg-surface) data-[state=checked]:bg-(--accent) data-[state=checked]:border-(--accent)
+		class="w-5 h-5 rounded-lg border flex items-center justify-center transition-all duration-200 cursor-pointer
+		       { checked
+		           ? 'bg-accent border-accent'
+		           : 'bg-bg-surface border-border' }
 		       focus-visible:outline-none"
 	>
 		{#snippet children({ checked })}
 			{#if checked}
-				<div class="text-(--accent-text) animate-in zoom-in duration-200">
+				<div class="text-accent-text animate-in zoom-in duration-200">
 					<Check size={ 14 } strokeWidth={ 3 } />
 				</div>
 			{/if}

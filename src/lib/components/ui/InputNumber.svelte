@@ -35,6 +35,7 @@
 		value = newValue;
 	}
 
+	// Restar valor respetando el mínimo
 	function handleDecrement() : void {
 		if ( disabled ) return;
 		const current = value ?? 0;
@@ -46,10 +47,10 @@
 
 <div class="flex flex-col gap-1.5 w-full">
 	{#if label}
-		<label for={ id } class="text-sm font-medium text-(--text-primary) select-none">
+		<label for={ id } class="text-sm font-medium text-text-primary select-none">
 			{ label }
 			{#if required}
-				<span class="text-red-500">*</span>
+				<span class="text-accent">*</span>
 			{/if}
 		</label>
 	{/if}
@@ -60,9 +61,9 @@
 			type={ "button" }
 			onclick={ handleDecrement }
 			{ disabled }
-			class="absolute left-1 p-2 rounded-lg text-(--text-muted) hover:text-(--text-primary)
-			       hover:bg-(--bg-surface-2) transition-all duration-200 active:scale-90
-			       disabled:opacity-40 disabled:cursor-not-allowed z-10"
+			class="absolute left-1.5 p-2 rounded-lg text-text-muted hover:text-accent
+			       hover:bg-accent-muted transition-all duration-300 active:scale-90
+			       disabled:opacity-40 disabled:cursor-not-allowed z-10 cursor-pointer"
 			aria-label="Restar valor"
 		>
 			<Minus size={ 16 } />
@@ -78,12 +79,12 @@
 			{ required }
 			{ disabled }
 			bind:value={ value }
-			class="w-full pl-12 pr-12 py-2.5 rounded-xl border transition-all duration-200 text-center
-			       bg-(--bg-surface-2) text-(--text-primary) placeholder:text-(--text-muted)
-			       focus:outline-none focus:ring-2 focus:ring-(--accent)/20
+			class="w-full pl-12 pr-12 py-2.5 rounded-xl border transition-all duration-300 text-center
+			       bg-bg-surface-2 text-text-primary placeholder:text-text-muted
+			       focus:outline-none focus:border-accent focus:ring-4 focus:ring-accent/10
 			       { error
-			           ? 'border-red-500 focus:border-red-500'
-			           : 'border-(--border) focus:border-(--border-focus)' }
+			           ? 'border-red-500 focus:border-red-500 focus:ring-red-500/10'
+			           : 'border-border hover:border-accent/40' }
 			       disabled:opacity-60 disabled:cursor-not-allowed"
 		/>
 
@@ -92,9 +93,9 @@
 			type={ "button" }
 			onclick={ handleIncrement }
 			{ disabled }
-			class="absolute right-1 p-2 rounded-lg text-(--text-muted) hover:text-(--text-primary)
-			       hover:bg-(--bg-surface-2) transition-all duration-200 active:scale-90
-			       disabled:opacity-40 disabled:cursor-not-allowed z-10"
+			class="absolute right-1.5 p-2 rounded-lg text-text-muted hover:text-accent
+			       hover:bg-accent-muted transition-all duration-300 active:scale-90
+			       disabled:opacity-40 disabled:cursor-not-allowed z-10 cursor-pointer"
 			aria-label="Sumar valor"
 		>
 			<Plus size={ 16 } />

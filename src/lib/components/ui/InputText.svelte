@@ -24,10 +24,10 @@
 
 <div class="flex flex-col gap-1.5 w-full">
 	{#if label}
-		<label for={ id } class="text-sm font-medium text-(--text-primary) select-none">
+		<label for={ id } class="text-sm font-medium text-text-primary select-none">
 			{ label }
 			{#if required}
-				<span class="text-red-500">*</span>
+				<span class="text-accent">*</span>
 			{/if}
 		</label>
 	{/if}
@@ -39,12 +39,12 @@
 		{ required }
 		{ disabled }
 		bind:value={ value }
-		class="w-full px-4 py-2.5 rounded-xl border transition-all duration-200
-		       bg-(--bg-surface-2) text-(--text-primary) placeholder:text-(--text-muted)
-		       focus:outline-none focus:ring-2 focus:ring-(--accent)/20
+		class="w-full px-4 py-2.5 rounded-xl border transition-all duration-300
+		       bg-bg-surface-2 text-text-primary placeholder:text-text-muted
+		       focus:outline-none focus:border-accent focus:ring-4 focus:ring-accent/10
 		       { error
-		           ? 'border-red-500 focus:border-red-500'
-		           : 'border-(--border) focus:border-(--border-focus)' }
+		           ? 'border-red-500 focus:border-red-500 focus:ring-red-500/10'
+		           : 'border-border hover:border-accent/40' }
 		       disabled:opacity-60 disabled:cursor-not-allowed"
 	/>
 
