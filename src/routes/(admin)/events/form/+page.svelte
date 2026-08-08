@@ -142,6 +142,7 @@
 		{ value: 'CANCELLED',   label: 'Cancelado' }
 	];
 
+	// Validar campos en el submit
 	function handleSubmit( e: SubmitEvent ): void {
 		e.preventDefault();
 		errorMsg = null;
@@ -188,16 +189,16 @@
 		<div class="flex items-center gap-3">
 			<a
 				href={ isEdit ? `/events/${ eventId }` : '/events' }
-				class="p-2 rounded-xl text-(--text-muted) hover:text-(--accent) hover:bg-(--accent-muted) transition-all"
+				class="p-2 rounded-xl text-text-muted hover:text-accent hover:bg-accent-muted transition-all duration-300"
 				aria-label="Volver"
 			>
 				<ArrowLeft size={20} />
 			</a>
 			<div>
-				<h1 class="text-2xl font-bold text-(--text-primary)">
+				<h1 class="text-3xl font-extrabold bg-gradient-to-r from-text-primary to-accent bg-clip-text text-transparent tracking-tight">
 					{ isEdit ? 'Editar Evento' : 'Nuevo Evento' }
 				</h1>
-				<p class="text-sm text-(--text-secondary) mt-0.5">
+				<p class="text-sm text-text-secondary mt-1">
 					{ isEdit ? ( eventQuery.data?.event_name ?? '' ) : 'Configura los detalles del nuevo evento' }
 				</p>
 			</div>
@@ -206,9 +207,9 @@
 		{#if isEdit && eventQuery.data?.status === 'DRAFT'}
 			<button
 				onclick={() => { deleteError = null; deleteModalOpen = true; }}
-				class="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium
-				       text-red-500 hover:bg-red-500/10 border border-transparent hover:border-red-500/20
-				       transition-all duration-200"
+				class="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold
+                    text-red-500 hover:bg-red-500/10 border border-transparent hover:border-red-500/20
+                    transition-all duration-300 cursor-pointer"
 			>
 				<Trash2 size={16} />
 				Eliminar Borrador
@@ -217,19 +218,19 @@
 	</div>
 
 	{#if isEdit && eventQuery.isLoading}
-		<div class="card p-8 space-y-4">
+		<div class="p-8 space-y-4 rounded-2xl bg-zinc-200 dark:bg-zinc-950/20 border border-border/80">
 			{#each [ 1, 2, 3, 4 ] as _}
-				<div class="h-12 rounded-xl bg-(--bg-surface-2) animate-pulse"></div>
+				<div class="h-12 rounded-xl bg-bg-surface-2 animate-pulse"></div>
 			{/each}
 		</div>
 	{:else}
 		<form onsubmit={handleSubmit} class="space-y-6">
 
 			<!-- Basic Info -->
-			<div class="card p-6 space-y-5">
-				<div class="flex items-center gap-2 mb-5">
-					<CalendarDays size={20} class="text-(--accent)" />
-					<h2 class="font-semibold text-(--text-primary)">Información básica</h2>
+			<div class="p-6 space-y-6 rounded-2xl bg-zinc-100/20 dark:bg-zinc-950/20 border border-border/80 hover:border-accent/30 hover:shadow-lg transition-all duration-300">
+				<div class="flex items-center gap-2.5">
+					<CalendarDays size={20} class="text-accent" style="filter: drop-shadow( 0 0 8px var(--accent) );" />
+					<h2 class="font-bold text-lg text-text-primary">Información básica</h2>
 				</div>
 
 				<InputText
@@ -268,11 +269,11 @@
 			</div>
 
 			<!-- Limits & Validation -->
-			<div class="card p-6 space-y-5">
-				<h2 class="flex items-center gap-2 mb-5">
-					<Bolt size={20} class="text-(--accent)" />
-					<p class="font-semibold text-(--text-primary)">Límites y validación</p>
-				</h2>
+			<div class="p-6 space-y-6 rounded-2xl bg-calypso-100/20 dark:bg-zinc-950/20 border border-border/80 hover:border-accent/30 hover:shadow-lg transition-all duration-300">
+				<div class="flex items-center gap-2.5">
+					<Bolt size={20} class="text-accent" style="filter: drop-shadow( 0 0 8px var(--accent) );" />
+					<h2 class="font-bold text-lg text-text-primary">Límites y validación</h2>
+				</div>
 
 				<div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
 					<InputNumber
@@ -291,7 +292,7 @@
 					/>
 				</div>
 
-				<div class="space-y-5">
+				<div class="space-y-4">
 					<Checkbox
 						label="Detectar menores de edad"
 						description="Aplica porciones especiales para menores en las órdenes"
@@ -315,7 +316,9 @@
 
 			<div class="flex gap-3 justify-end">
 				<a href={ isEdit ? `/events/${ eventId }` : '/events' }>
-					<Button variant="secondary">Cancelar</Button>
+					<Button variant="secondary" class="hover:text-accent hover:bg-accent-muted/30 transition-all duration-300">
+						Cancelar
+					</Button>
 				</a>
 				<Button
 					type="submit"
@@ -340,7 +343,7 @@
 	confirmVariant="danger"
 	loading={deleteMut.isPending}
 >
-	<p>¿Estás seguro de que deseas eliminar el evento <strong class="text-(--text-primary)">"{eventQuery.data?.event_name}"</strong>?</p>
+	<p>¿Estás seguro de que deseas eliminar el evento <strong class="text-text-primary">"{eventQuery.data?.event_name}"</strong>?</p>
 	<p class="mt-2 text-xs">Esta acción no se puede deshacer.</p>
 	{#if deleteError}
 		<p class="mt-3 text-red-500 text-sm">{deleteError}</p>
