@@ -1,69 +1,100 @@
 <script lang="ts">
-	import { createQuery, createMutation, useQueryClient } from '@tanstack/svelte-query';
-	import { INTERNAL_ENDPOINT }  from '$lib/utils/endpoints.js';
-	import StatusBadge            from '$lib/components/ui/StatusBadge.svelte';
-	import Button                 from '$lib/components/ui/Button.svelte';
-	import Modal                  from '$lib/components/ui/Modal.svelte';
-	import type { EventConfig, EventStatus } from '$lib/types/index.js';
-	import { CalendarPlus, CalendarDays, Filter, Pencil, Trash2, Eye } from '@lucide/svelte';
+	import { deserialize }      from '$app/forms';
 
-	const qc = useQueryClient();
+    import { CalendarPlus, CalendarDays, Pencil, Trash2, Eye, Funnel } from '@lucide/svelte';
 
-	const eventsQuery = createQuery<EventConfig[]>( () => ( {
-		queryKey : [ 'events' ],
-		queryFn  : async () => {
-			const res = await fetch( INTERNAL_ENDPOINT.events.list );
-			if ( !res.ok ) throw new Error( 'Error al cargar eventos' );
-			return res.json();
-		},
-	} ) );
+	import type {
+        EventConfig,
+        EventStatus
+    }                   from '$lib/types/index.js';
+    import { eventsStore } from '$lib/stores/events.svelte.js';
+    import StatusBadge  from '$lib/components/ui/StatusBadge.svelte';
+	import Button       from '$lib/components/ui/Button.svelte';
+	import Modal        from '$lib/components/ui/Modal.svelte';
 
-	const deleteMutation = createMutation( () => ( {
-		mutationFn: async ( id: string ) => {
-			const res = await fetch( INTERNAL_ENDPOINT.events.delete( id ), { method: 'DELETE' } );
-			if ( !res.ok ) {
-				const body = await res.json();
-				throw new Error( body.error ?? 'Error al eliminar evento' );
-			}
-		},
-		onSuccess: () => {
-			qc.invalidateQueries( { queryKey: [ 'events' ] } );
-			deleteModal = { open: false, id: null, name: '' };
-		},
-		onError: ( err: Error ) => {
-			deleteError = err.message;
-		},
-	} ) );
 
-	let filterStatus = $state<EventStatus | 'ALL'>( 'ALL' );
+    interface Props {
+		data: {
+			events: EventConfig[];
+		};
+	}
+
+
+    let { data } : Props = $props();
+
+    $effect( () => {
+        if ( !eventsStore.isInitialized ) {
+            eventsStore.set( data.events );
+        }
+    } );
+
+
+    let filterStatus = $state<EventStatus | 'ALL'>( 'ALL' );
 	let deleteModal  = $state<{ open: boolean; id: string | null; name: string }>( { open: false, id: null, name: '' } );
 	let deleteError  = $state<string | null>( null );
+	let isDeleting   = $state( false );
 
-	const filtered = $derived(
+
+    const filtered = $derived(
 		filterStatus === 'ALL'
-			? ( eventsQuery.data ?? [] )
-			: ( eventsQuery.data ?? [] ).filter( ( e ) => e.status === filterStatus )
+			? eventsStore.list
+			: eventsStore.list.filter( ( e ) => e.status === filterStatus )
 	);
 
-	const statusOptions: Array<{ value: EventStatus | 'ALL'; label: string }> = [
+
+    const statusOptions: Array<{ value: EventStatus | 'ALL'; label: string }> = [
 		{ value: 'ALL',         label: 'Todos' },
 		{ value: 'DRAFT',       label: 'Borrador' },
 		{ value: 'IN_PROGRESS', label: 'En Curso' },
 		{ value: 'FINISHED',    label: 'Finalizado' },
-		{ value: 'CANCELLED',   label: 'Cancelado' },
+		{ value: 'CANCELLED',   label: 'Cancelado' }
 	];
 
-	function formatDate( d: string ): string {
+
+    function formatDate( d: string ): string {
 		return new Date( d ).toLocaleDateString( 'es-CL', { day: '2-digit', month: 'short', year: 'numeric' } );
 	}
 
-	function openDeleteModal( event: EventConfig ): void {
+
+    function openDeleteModal( event: EventConfig ): void {
 		deleteError = null;
 		deleteModal = { open: true, id: event.id, name: event.event_name };
 	}
 
-	function confirmDelete(): void {
-		if ( deleteModal.id ) deleteMutation.mutate( deleteModal.id );
+
+    async function confirmDelete(): Promise<void> {
+		if ( !deleteModal.id ) return;
+
+        isDeleting  = true;
+		deleteError = null;
+
+		const formData = new FormData();
+
+        formData.append( 'id', deleteModal.id );
+
+		try {
+			const response = await fetch( '?/delete', {
+				method : 'POST',
+				body   : formData
+			});
+
+			const result = deserialize( await response.text() );
+
+			if ( result.type === 'success' ) {
+				if ( deleteModal.id ) {
+					eventsStore.remove( deleteModal.id );
+				}
+				deleteModal = { open: false, id: null, name: '' };
+			} else if ( result.type === 'failure' ) {
+				deleteError = ( result.data as any )?.error || 'Error al eliminar evento';
+			} else {
+				deleteError = 'Ocurrió un error inesperado';
+			}
+		} catch ( err: any ) {
+			deleteError = err.message;
+		} finally {
+			isDeleting = false;
+		}
 	}
 </script>
 
@@ -72,26 +103,30 @@
 </svelte:head>
 
 <div class="space-y-6">
-
 	<!-- Header -->
 	<div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
 		<div>
 			<h1 class="text-2xl font-bold text-(--text-primary)">Eventos</h1>
-			<p class="text-(--text-secondary) mt-1 text-sm">Gestión completa de eventos de FamiPass</p>
+
+            <p class="text-(--text-secondary) mt-1 text-sm">Gestión completa de eventos de FamiPass</p>
 		</div>
-		<a href="/events/form">
+
+        <a href="/events/form">
 			<Button variant="primary">
 				<CalendarPlus size={16} />
-				Nuevo Evento
+
+                Nuevo Evento
 			</Button>
 		</a>
 	</div>
 
 	<!-- Filters -->
 	<div class="card p-4 flex flex-wrap items-center gap-3">
-		<Filter size={16} class="text-(--text-muted) shrink-0" />
-		<span class="text-sm text-(--text-secondary) font-medium">Filtrar:</span>
-		{#each statusOptions as opt}
+        <Funnel size={16} class="text-(--text-muted) shrink-0" />
+
+        <span class="text-sm text-(--text-secondary) font-medium">Filtrar:</span>
+
+        {#each statusOptions as opt}
 			<button
 				onclick={() => { filterStatus = opt.value; }}
 				class="px-3 py-1.5 rounded-lg text-xs font-medium transition-all duration-200
@@ -106,17 +141,7 @@
 
 	<!-- Table -->
 	<div class="card overflow-hidden">
-		{#if eventsQuery.isLoading}
-			<div class="p-8 space-y-4">
-				{#each [ 1, 2, 3, 4 ] as _}
-					<div class="h-12 rounded-xl bg-(--bg-surface-2) animate-pulse"></div>
-				{/each}
-			</div>
-		{:else if eventsQuery.isError}
-			<div class="p-8 text-center text-red-500">
-				Error al cargar los eventos. Intenta recargar la página.
-			</div>
-		{:else if filtered.length === 0}
+		{#if filtered.length === 0}
 			<div class="flex flex-col items-center py-16 text-(--text-muted)">
 				<CalendarDays size={48} class="mb-3 opacity-30" />
 				<p class="text-sm">No hay eventos con este filtro.</p>
@@ -215,7 +240,7 @@
 	onConfirm={confirmDelete}
 	confirmLabel="Eliminar"
 	confirmVariant="danger"
-	loading={deleteMutation.isPending}
+	loading={isDeleting}
 >
 	<p>¿Estás seguro de que deseas eliminar el evento <strong class="text-(--text-primary)">"{deleteModal.name}"</strong>?</p>
 	<p class="mt-2 text-xs">Esta acción no se puede deshacer.</p>
