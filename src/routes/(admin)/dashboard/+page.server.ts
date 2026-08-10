@@ -2,9 +2,8 @@ import type { PageServerLoad } from './$types.js';
 
 import { getEvents } from '$lib/server/supabase/services/events.service.js';
 
-
 export const load: PageServerLoad = async () => {
-	const events = await getEvents();
+	const result = await getEvents({ pageSize: 1000 });
 
-	return { events };
+	return { events: result.data };
 };
