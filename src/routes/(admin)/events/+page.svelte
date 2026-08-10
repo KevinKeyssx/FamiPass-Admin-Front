@@ -1,49 +1,55 @@
 <script lang="ts">
 	import { deserialize }      from '$app/forms';
+	import { page }             from '$app/state';
+	import { goto, invalidate } from '$app/navigation';
 
-    import { CalendarPlus, CalendarDays, Pencil, Trash2, Eye, Funnel } from '@lucide/svelte';
+    import { CalendarPlus, Search } from '@lucide/svelte';
 
-	import type {
-        EventConfig,
-        EventStatus
-    }                   from '$lib/types/index.js';
-    import { eventsStore } from '$lib/stores/events.svelte.js';
-    import StatusBadge  from '$lib/components/ui/StatusBadge.svelte';
-	import Button       from '$lib/components/ui/Button.svelte';
-	import Modal        from '$lib/components/ui/Modal.svelte';
+	import type { EventConfig } from '$lib/types/index.js';
+	import ViewSwitcher         from '$lib/components/shared/ViewSwitcher.svelte';
+	import Pagination           from '$lib/components/shared/Pagination.svelte';
+	import EventTable           from './components/EventTable.svelte';
+	import EventCard            from './components/EventCard.svelte';
+	import Button               from '$lib/components/ui/Button.svelte';
+	import Modal                from '$lib/components/ui/Modal.svelte';
+	import DatePicker           from '$lib/components/ui/DatePicker.svelte';
+	import Select               from '$lib/components/ui/Select.svelte';
 
 
     interface Props {
 		data: {
-			events: EventConfig[];
+			events : EventConfig[];
+			count  : number;
 		};
 	}
 
 
     let { data } : Props = $props();
 
-    $effect( () => {
-        if ( !eventsStore.isInitialized ) {
-            eventsStore.set( data.events );
-        }
-    } );
+
+    let searchQuery             = $state( page.url.searchParams.get( 'search' ) || '' );
+	let searchDate              = $state( page.url.searchParams.get( 'date' ) || '' );
+	let selectedStatus          = $state( page.url.searchParams.get( 'status' ) || 'ALL' );
+	let selectedVerification    = $state( page.url.searchParams.get( 'verification' ) || 'ALL' );
+	let selectedMinors          = $state( page.url.searchParams.get( 'minors' ) || 'ALL' );
+	let deleteError             = $state<string | null>( null );
+    let isDeleting              = $state( false );
+    let deleteModal             = $state<{
+		open : boolean;
+		id   : string | null;
+		name : string;
+	}>({
+        open : false,
+		id   : null,
+		name : ''
+	});
 
 
-    let filterStatus = $state<EventStatus | 'ALL'>( 'ALL' );
-	let deleteModal  = $state<{ open: boolean; id: string | null; name: string }>( { open: false, id: null, name: '' } );
-	let deleteError  = $state<string | null>( null );
-	let isDeleting   = $state( false );
+    const currentView = $derived( page.url.searchParams.get( 'view' ) || 'card' );
 
 
-    const filtered = $derived(
-		filterStatus === 'ALL'
-			? eventsStore.list
-			: eventsStore.list.filter( ( e ) => e.status === filterStatus )
-	);
-
-
-    const statusOptions: Array<{ value: EventStatus | 'ALL'; label: string }> = [
-		{ value: 'ALL',         label: 'Todos' },
+    const statusOptions = [
+		{ value: 'ALL',         label: 'Todos los estados' },
 		{ value: 'DRAFT',       label: 'Borrador' },
 		{ value: 'IN_PROGRESS', label: 'En Curso' },
 		{ value: 'FINISHED',    label: 'Finalizado' },
@@ -51,21 +57,121 @@
 	];
 
 
-    function formatDate( d: string ): string {
-		return new Date( d ).toLocaleDateString( 'es-CL', { day: '2-digit', month: 'short', year: 'numeric' } );
+    const verificationOptions = [
+		{ value: 'ALL',   label: 'Todos' },
+		{ value: 'TRUE',  label: 'Requerida' },
+		{ value: 'FALSE', label: 'No Requerida' }
+	];
+
+
+    const minorsOptions = [
+		{ value: 'ALL',   label: 'Todos' },
+		{ value: 'TRUE',  label: 'Sí' },
+		{ value: 'FALSE', label: 'No' }
+	];
+
+
+    $effect( () => {
+		const urlDate         = page.url.searchParams.get( 'date' ) || '';
+		const urlStatus       = page.url.searchParams.get( 'status' ) || 'ALL';
+		const urlVerification = page.url.searchParams.get( 'verification' ) || 'ALL';
+		const urlMinors       = page.url.searchParams.get( 'minors' ) || 'ALL';
+
+		if (
+			searchDate !== urlDate ||
+			selectedStatus !== urlStatus ||
+			selectedVerification !== urlVerification ||
+			selectedMinors !== urlMinors
+		) {
+			handleFilterChange();
+		}
+	});
+
+
+    function handleFilterChange(): void {
+		const url = new URL( page.url );
+
+		if ( searchQuery.trim() ) {
+			url.searchParams.set( 'search', searchQuery.trim() );
+		} else {
+			url.searchParams.delete( 'search' );
+		}
+
+		if ( searchDate ) {
+			url.searchParams.set( 'date', searchDate );
+		} else {
+			url.searchParams.delete( 'date' );
+		}
+
+		if ( selectedStatus && selectedStatus !== 'ALL' ) {
+			url.searchParams.set( 'status', selectedStatus );
+		} else {
+			url.searchParams.delete( 'status' );
+		}
+
+		if ( selectedVerification && selectedVerification !== 'ALL' ) {
+			url.searchParams.set( 'verification', selectedVerification );
+		} else {
+			url.searchParams.delete( 'verification' );
+		}
+
+		if ( selectedMinors && selectedMinors !== 'ALL' ) {
+			url.searchParams.set( 'minors', selectedMinors );
+		} else {
+			url.searchParams.delete( 'minors' );
+		}
+
+		url.searchParams.set( 'page', '1' );
+
+		goto( url.pathname + url.search, {
+			keepFocus    : true,
+			replaceState : true
+		} );
+	}
+
+
+    function clearDateFilter(): void {
+		searchDate = '';
+	}
+
+
+    function clearAllFilters(): void {
+		searchQuery          = '';
+		searchDate           = '';
+		selectedStatus       = 'ALL';
+		selectedVerification = 'ALL';
+		selectedMinors       = 'ALL';
+
+		const url = new URL( page.url );
+
+        url.searchParams.delete( 'search' );
+		url.searchParams.delete( 'date' );
+		url.searchParams.delete( 'status' );
+		url.searchParams.delete( 'verification' );
+		url.searchParams.delete( 'minors' );
+		url.searchParams.set( 'page', '1' );
+
+		goto( url.pathname + url.search, {
+			keepFocus    : true,
+			replaceState : true
+		});
 	}
 
 
     function openDeleteModal( event: EventConfig ): void {
 		deleteError = null;
-		deleteModal = { open: true, id: event.id, name: event.event_name };
+		deleteModal = {
+			open : true,
+			id   : event.id,
+			name : event.event_name
+		};
 	}
 
 
     async function confirmDelete(): Promise<void> {
 		if ( !deleteModal.id ) return;
 
-        isDeleting  = true;
+		isDeleting  = true;
 		deleteError = null;
 
 		const formData = new FormData();
@@ -81,10 +187,13 @@
 			const result = deserialize( await response.text() );
 
 			if ( result.type === 'success' ) {
-				if ( deleteModal.id ) {
-					eventsStore.remove( deleteModal.id );
-				}
-				deleteModal = { open: false, id: null, name: '' };
+				await invalidate( 'app:events' );
+
+                deleteModal = {
+					open : false,
+					id   : null,
+					name : ''
+				};
 			} else if ( result.type === 'failure' ) {
 				deleteError = ( result.data as any )?.error || 'Error al eliminar evento';
 			} else {
@@ -107,145 +216,136 @@
 	<div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
 		<div>
 			<h1 class="text-2xl font-bold text-(--text-primary)">Eventos</h1>
-
-            <p class="text-(--text-secondary) mt-1 text-sm">Gestión completa de eventos de FamiPass</p>
+			<p class="text-(--text-secondary) mt-1 text-sm">Gestión completa de eventos de FamiPass</p>
 		</div>
 
-        <a href="/events/form">
-			<Button variant="primary">
-				<CalendarPlus size={16} />
-
-                Nuevo Evento
-			</Button>
-		</a>
+		<div class="flex items-center gap-3 self-end sm:self-auto">
+			<ViewSwitcher />
+			<a href="/events/form">
+				<Button variant="primary">
+					<CalendarPlus size={ 16 } />
+					Nuevo Evento
+				</Button>
+			</a>
+		</div>
 	</div>
 
-	<!-- Filters -->
-	<div class="card p-4 flex flex-wrap items-center gap-3">
-        <Funnel size={16} class="text-(--text-muted) shrink-0" />
-
-        <span class="text-sm text-(--text-secondary) font-medium">Filtrar:</span>
-
-        {#each statusOptions as opt}
-			<button
-				onclick={() => { filterStatus = opt.value; }}
-				class="px-3 py-1.5 rounded-lg text-xs font-medium transition-all duration-200
-                    {filterStatus === opt.value
-                        ? 'bg-(--accent) text-(--accent-text) shadow-sm'
-                        : 'bg-(--bg-surface-2) text-(--text-secondary) hover:text-(--accent) hover:bg-(--accent-muted)'}"
-			>
-				{opt.label}
-			</button>
-		{/each}
-	</div>
-
-	<!-- Table -->
-	<div class="card overflow-hidden">
-		{#if filtered.length === 0}
-			<div class="flex flex-col items-center py-16 text-(--text-muted)">
-				<CalendarDays size={48} class="mb-3 opacity-30" />
-				<p class="text-sm">No hay eventos con este filtro.</p>
+	<!-- Controls / Filters & Search Grid -->
+	<div class="card p-5 space-y-4 bg-linear-to-b from-(--bg-surface) to-(--bg-surface-2) border border-(--border)/60 rounded-2xl relative">
+		<!-- First Row: Search Text & Date Picker -->
+		<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+			<!-- Name Search -->
+			<div class="relative">
+				<Search size={ 16 } class="absolute left-3.5 top-1/2 -translate-y-1/2 text-(--text-muted) pointer-events-none" />
+				<input
+					type="text"
+					bind:value={ searchQuery }
+					placeholder="Buscar eventos por nombre..."
+					onkeydown={ ( e ) => e.key === 'Enter' && handleFilterChange() }
+					class="w-full pl-10 pr-24 py-2.5 rounded-xl border border-(--border)/60 transition-all duration-300
+						bg-(--bg-surface-2) text-(--text-primary) placeholder:text-(--text-muted) text-sm
+						focus:outline-none focus:border-(--accent) focus:ring-4 focus:ring-(--accent)/10"
+				/>
+				<button
+					onclick={ handleFilterChange }
+					class="absolute right-1.5 top-1/2 -translate-y-1/2 px-3 py-1.5 rounded-lg text-xs font-semibold
+						bg-(--accent) text-(--accent-text) hover:bg-(--accent-hover) transition-colors cursor-pointer"
+				>
+					Buscar
+				</button>
 			</div>
+
+			<!-- Date Search -->
+			<div class="flex items-center gap-2">
+				<span class="text-xs text-(--text-secondary) font-medium whitespace-nowrap">Fecha:</span>
+				<div class="flex-1">
+					<DatePicker
+						bind:value={ searchDate }
+					/>
+				</div>
+				{#if searchDate }
+					<button
+						onclick={ clearDateFilter }
+						class="text-xs text-red-500 hover:underline font-semibold cursor-pointer shrink-0"
+					>
+						Limpiar
+					</button>
+				{/if}
+			</div>
+		</div>
+
+		<!-- Second Row: Advanced Select Filters -->
+		<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 items-end">
+			<!-- Status Selector -->
+			<div class="flex flex-col gap-1.5 w-full">
+				<span class="text-xs text-(--text-secondary) font-semibold uppercase tracking-wider">Estado del Evento</span>
+				<Select
+					bind:value={ selectedStatus }
+					options={ statusOptions }
+					placeholder="Todos los estados"
+				/>
+			</div>
+
+			<!-- Verification Required Selector -->
+			<div class="flex flex-col gap-1.5 w-full">
+				<span class="text-xs text-(--text-secondary) font-semibold uppercase tracking-wider">Verificación Req.</span>
+				<Select
+					bind:value={ selectedVerification }
+					options={ verificationOptions }
+					placeholder="Todos"
+				/>
+			</div>
+
+			<!-- Detect By Minors Selector -->
+			<div class="flex flex-col gap-1.5 w-full">
+				<span class="text-xs text-(--text-secondary) font-semibold uppercase tracking-wider">Detecta Menores</span>
+				<Select
+					bind:value={ selectedMinors }
+					options={ minorsOptions }
+					placeholder="Todos"
+				/>
+			</div>
+
+			<!-- Action Buttons -->
+			<div class="flex justify-end gap-2.5">
+				<Button
+					variant="secondary"
+					size="sm"
+					class="w-full"
+					onclick={ clearAllFilters }
+				>
+					Limpiar Filtros
+				</Button>
+			</div>
+		</div>
+	</div>
+
+	<!-- Event List View (Table or Card) -->
+	<div class="flex flex-col">
+		{#if currentView === 'table' }
+			<EventTable events={ data.events } onDelete={ openDeleteModal } />
 		{:else}
-			<div class="overflow-x-auto">
-				<table class="w-full text-sm">
-					<thead>
-						<tr class="border-b border-(--border) bg-(--bg-surface-2)">
-							<th class="text-left px-4 py-3 font-semibold text-(--text-secondary)">Nombre</th>
-							<th class="text-left px-4 py-3 font-semibold text-(--text-secondary) hidden sm:table-cell">Fecha</th>
-							<th class="text-left px-4 py-3 font-semibold text-(--text-secondary) hidden md:table-cell">Deadline</th>
-							<th class="text-left px-4 py-3 font-semibold text-(--text-secondary) hidden lg:table-cell">Lím. Miembros</th>
-							<th class="text-left px-4 py-3 font-semibold text-(--text-secondary) hidden lg:table-cell">Lím. Huéspedes</th>
-							<th class="text-left px-4 py-3 font-semibold text-(--text-secondary) hidden xl:table-cell">Verif. Requerida</th>
-							<th class="text-left px-4 py-3 font-semibold text-(--text-secondary)">Estado</th>
-							<th class="text-right px-4 py-3 font-semibold text-(--text-secondary)">Acciones</th>
-						</tr>
-					</thead>
-					<tbody class="divide-y divide-(--border)">
-						{#each filtered as event}
-							<tr class="hover:bg-(--bg-surface-2) transition-colors">
-								<td class="px-4 py-3">
-									<p class="font-medium text-(--text-primary) truncate max-w-45">{event.event_name}</p>
-									{#if event.detect_by_minors}
-										<span class="text-xs text-(--text-muted)">Detecta menores</span>
-									{/if}
-								</td>
-								<td class="px-4 py-3 text-(--text-secondary) hidden sm:table-cell whitespace-nowrap">
-									{formatDate( event.event_date )}
-								</td>
-								<td class="px-4 py-3 text-(--text-secondary) hidden md:table-cell whitespace-nowrap">
-									{formatDate( event.registration_deadline )}
-								</td>
-								<td class="px-4 py-3 text-(--text-secondary) hidden lg:table-cell text-center">
-									{event.max_family_members ?? '—'}
-								</td>
-								<td class="px-4 py-3 text-(--text-secondary) hidden lg:table-cell text-center">
-									{event.max_guests_per_family ?? '—'}
-								</td>
-								<td class="px-4 py-3 hidden xl:table-cell text-center">
-									{#if event.require_guest_verification}
-										<span class="text-(--accent)">✓</span>
-									{:else}
-										<span class="text-(--text-muted)">—</span>
-									{/if}
-								</td>
-								<td class="px-4 py-3">
-									<StatusBadge status={event.status} />
-								</td>
-								<td class="px-4 py-3">
-									<div class="flex items-center justify-end gap-1">
-										<a
-											href="/events/{event.id}"
-											class="p-2 rounded-lg text-(--text-muted) hover:text-(--accent)
-											       hover:bg-(--accent-muted) transition-all"
-											aria-label="Ver evento"
-										>
-											<Eye size={16} />
-										</a>
-										<a
-											href="/events/form?id={ event.id }"
-											class="p-2 rounded-lg text-(--text-muted) hover:text-(--accent)
-											       hover:bg-(--accent-muted) transition-all"
-											aria-label="Editar evento"
-										>
-
-											<Pencil size={16} />
-										</a>
-										{#if event.status === 'DRAFT'}
-											<button
-												onclick={() => openDeleteModal( event )}
-												class="p-2 rounded-lg text-(--text-muted) hover:text-red-500
-												       hover:bg-red-500/10 transition-all"
-												aria-label="Eliminar evento"
-											>
-												<Trash2 size={16} />
-											</button>
-										{/if}
-									</div>
-								</td>
-							</tr>
-						{/each}
-					</tbody>
-				</table>
-			</div>
+			<EventCard events={ data.events } onDelete={ openDeleteModal } />
 		{/if}
+
+		<!-- Reusable Pagination Component -->
+		<Pagination count={ data.count } />
 	</div>
 </div>
 
 <!-- Delete modal -->
 <Modal
-	open={deleteModal.open}
+	open={ deleteModal.open }
 	title="Eliminar evento"
 	onClose={() => { deleteModal = { open: false, id: null, name: '' }; deleteError = null; }}
-	onConfirm={confirmDelete}
+	onConfirm={ confirmDelete }
 	confirmLabel="Eliminar"
 	confirmVariant="danger"
-	loading={isDeleting}
+	loading={ isDeleting }
 >
-	<p>¿Estás seguro de que deseas eliminar el evento <strong class="text-(--text-primary)">"{deleteModal.name}"</strong>?</p>
+	<p>¿Estás seguro de que deseas eliminar el evento <strong class="text-text-primary">"{ deleteModal.name }"</strong>?</p>
 	<p class="mt-2 text-xs">Esta acción no se puede deshacer.</p>
-	{#if deleteError}
-		<p class="mt-3 text-red-500 text-sm">{deleteError}</p>
+	{#if deleteError }
+		<p class="mt-3 text-red-500 text-sm">{ deleteError }</p>
 	{/if}
 </Modal>
-
