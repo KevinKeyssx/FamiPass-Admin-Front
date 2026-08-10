@@ -19,7 +19,7 @@ export type RelationshipType =
     | 'INVITADO'
     | 'OTRO';
 
-export type UserRole = 'ADMIN' | 'STAFF' | 'MEMBER';
+export type UserRole = 'SUPER_ADMIN' | 'ADMIN' | 'STAFF' | 'MEMBER';
 
 export interface User {
     id               : string;
