@@ -1,17 +1,64 @@
 import { supabaseServer } from '../supabase.js';
-import type { EventConfig } from '$lib/types/index.js';
 
-export async function getEvents(): Promise<EventConfig[]> {
-	const { data, error } = await supabaseServer
+import type { EventConfig, EventStatus } from '$lib/types/index.js';
+
+
+export async function getEvents( params?: {
+	search?       : string;
+	date?         : string;
+	status?       : 'ALL' | EventStatus;
+	verification? : 'ALL' | 'TRUE' | 'FALSE';
+	minors?       : 'ALL' | 'TRUE' | 'FALSE';
+	page?         : number;
+	pageSize?     : number;
+} ): Promise<{ data: EventConfig[]; count: number }> {
+	const search       = params?.search || '';
+	const date         = params?.date || '';
+	const status       = params?.status || 'ALL';
+	const verification = params?.verification || 'ALL';
+	const minors       = params?.minors || 'ALL';
+	const page         = params?.page || 1;
+	const pageSize     = params?.pageSize || 12;
+
+	let query = supabaseServer
 		.from( 'events' )
-		.select( '*' )
-		.order( 'event_date', { ascending: true } );
+		.select( '*', { count: 'exact' } );
+
+	if ( search ) {
+		query = query.ilike( 'event_name', `%${ search }%` );
+	}
+
+	if ( date ) {
+		query = query.eq( 'event_date', date );
+	}
+
+	if ( status && status !== 'ALL' ) {
+		query = query.eq( 'status', status );
+	}
+
+	if ( verification && verification !== 'ALL' ) {
+		query = query.eq( 'require_guest_verification', verification === 'TRUE' );
+	}
+
+	if ( minors && minors !== 'ALL' ) {
+		query = query.eq( 'detect_by_minors', minors === 'TRUE' );
+	}
+
+	query = query.order( 'event_date', { ascending: true } );
+
+	const from = ( page - 1 ) * pageSize;
+	const to   = from + pageSize - 1;
+
+	const { data, error, count } = await query.range( from, to );
 
 	if ( error ) {
 		throw new Error( error.message );
 	}
 
-	return data as EventConfig[];
+	return {
+		data  : data as EventConfig[],
+		count : count || 0
+	};
 }
 
 export async function getEventById( id: string ): Promise<any | null> {
@@ -47,14 +94,14 @@ export async function createEvent(
 	const { data, error } = await supabaseServer
 		.from( 'events' )
 		.insert( {
-			event_name					: body.event_name,
-			event_date					: body.event_date,
-			registration_deadline		: body.registration_deadline,
-			detect_by_minors			: body.detect_by_minors ?? false,
-			status						: body.status ?? 'DRAFT',
-			max_family_members			: body.max_family_members ?? null,
-			max_guests_per_family		: body.max_guests_per_family ?? null,
-			require_guest_verification	: body.require_guest_verification ?? false,
+			event_name                 : body.event_name,
+			event_date                 : body.event_date,
+			registration_deadline      : body.registration_deadline,
+			detect_by_minors           : body.detect_by_minors ?? false,
+			status                     : body.status ?? 'DRAFT',
+			max_family_members         : body.max_family_members ?? null,
+			max_guests_per_family      : body.max_guests_per_family ?? null,
+			require_guest_verification : body.require_guest_verification ?? false
 		} )
 		.select()
 		.single();
