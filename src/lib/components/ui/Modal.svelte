@@ -35,8 +35,8 @@
 <svelte:window onkeydown={handleKeydown} />
 
 {#if open}
-	<!-- svelte-ignore a11y-click-events-have-key-events -->
-	<!-- svelte-ignore a11y-no-static-element-interactions -->
+	<!-- svelte-ignore a11y_interactive_supports_focus -->
+	<!-- svelte-ignore a11y_click_events_have_key_events -->
 	<div
 		class="fixed inset-0 z-50 flex items-center justify-center p-4"
 		data-backdrop="true"
@@ -50,8 +50,7 @@
 
 		<!-- Panel -->
 		<div
-			class="relative z-10 w-full max-w-md rounded-2xl border border-(--border)
-			       bg-(--bg-surface) shadow-(--shadow-lg) p-6 animate-in"
+			class="relative z-10 w-full max-w-md rounded-2xl border border-(--border) bg-(--bg-surface) shadow-(--shadow-lg) p-6 animate-in"
 		>
 			<!-- Header -->
 			<div class="flex items-center justify-between mb-4">
@@ -60,8 +59,7 @@
 				</h2>
 				<button
 					onclick={onClose}
-					class="p-1.5 rounded-lg text-(--text-muted) hover:text-(--text-primary)
-					       hover:bg-(--bg-surface-2) transition-colors"
+					class="p-1.5 rounded-lg text-(--text-muted) hover:text-(--text-primary) hover:bg-(--bg-surface-2) transition-colors"
 					aria-label="Cerrar modal"
 				>
 					<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -97,4 +95,3 @@
 		animation: animate-in 0.2s ease-out;
 	}
 </style>
-
