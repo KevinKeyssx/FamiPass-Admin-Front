@@ -1,11 +1,8 @@
-import type {
-    RelationshipType,
-    CommunityOrganization
-}                           from './familyMember.js';
-import type { FamilyEvent } from './family.js';
-import type { EventConfig } from './event.js';
-import type { User }        from './user.js';
-import type { Product }     from './product.js';
+import type { CommunityOrganization } from './familyMember.js';
+import type { FamilyEvent }           from './family.js';
+import type { EventConfig }           from './event.js';
+import type { User }                  from './user.js';
+import type { Product }               from './product.js';
 
 
 export type OrderStatus = 'PENDING' | 'COMPLETED' | 'CANCELLED';
@@ -14,7 +11,6 @@ export type OrderStatus = 'PENDING' | 'COMPLETED' | 'CANCELLED';
 export interface FamilyMemberSnapshot {
     rut              : string;
     full_name        : string;
-    relationship     : RelationshipType;
     organization     : CommunityOrganization;
     is_representative: boolean;
 }
