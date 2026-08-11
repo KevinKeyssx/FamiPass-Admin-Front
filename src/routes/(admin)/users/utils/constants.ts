@@ -33,27 +33,6 @@ export function getRoleLabel( role: UserRole ): string {
 }
 
 
-export function getOrgLabel( org: string ): string {
-    switch ( org ) {
-        case 'CUORUM':
-            return 'Cuórum';
-        case 'SOC_SOC':
-            return 'Soc. Socorro';
-        case 'HOMBRES_JOVENES':
-            return 'Hombres Jóvenes';
-        case 'MUJERES_JOVENES':
-            return 'Mujeres Jóvenes';
-        case 'PRIMARIA':
-            return 'Primaria';
-        case 'FRIENDS':
-            return 'Amigos';
-        case 'NINGUNA':
-            return 'Ninguna';
-        default:
-            return org || '—';
-    }
-}
-
 const basicRoles = [
     { value: 'SUPER_ADMIN', label: 'Súper Admin' },
 	{ value: 'ADMIN',       label: 'Administrador' },
@@ -78,28 +57,3 @@ export function getFilteredRoleOptions( currentUserRole: string | null ) {
 
     return [ ...basicRoles ];
 }
-
-
-export const orgOptions = [
-    { value: 'NINGUNA',         label: 'Ninguna' },
-    { value: 'CUORUM',          label: 'Cuórum' },
-    { value: 'SOC_SOC',         label: 'Soc. Socorro' },
-    { value: 'HOMBRES_JOVENES', label: 'Hombres Jóvenes' },
-    { value: 'MUJERES_JOVENES', label: 'Mujeres Jóvenes' },
-    { value: 'PRIMARIA',        label: 'Primaria' },
-    { value: 'FRIENDS',         label: 'Amigos' }
-];
-
-
-export const relOptions = [
-    { value: 'PADRE',    label: 'Padre' },
-    { value: 'MADRE',    label: 'Madre' },
-    { value: 'HIJO',     label: 'Hijo/a' },
-    { value: 'HERMANO',  label: 'Hermano/a' },
-    { value: 'ABUELO',   label: 'Abuelo/a' },
-    { value: 'CONYUGE',  label: 'Cónyuge' },
-    { value: 'NIETO',    label: 'Nieto/a' },
-    { value: 'TIO',      label: 'Tío/a' },
-    { value: 'INVITADO', label: 'Invitado/a' },
-    { value: 'OTRO',     label: 'Otro' }
-];
