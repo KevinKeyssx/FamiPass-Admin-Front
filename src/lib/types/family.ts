@@ -2,12 +2,13 @@ import type { FamilyMember } from './familyMember.js';
 import type { EventConfig }  from './event.js';
 
 export interface Family {
-    id          : string;
-    family_name : string;
-    code        : number;
-    created_at? : string;
-    updated_at? : string;
-    members?    : FamilyMember[];
+    id             : string;
+    family_name    : string;
+    code           : number;
+    created_at?    : string;
+    updated_at?    : string;
+    members?       : FamilyMember[];
+    members_count? : number;
 }
 
 
