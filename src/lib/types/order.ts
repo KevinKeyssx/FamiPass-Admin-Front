@@ -1,10 +1,15 @@
-import type { EventConfig }                            from './event.js';
-import type { FamilyEvent }                            from './family.js';
-import type { User }                                   from './user.js';
-import type { Product }                                from './product.js';
-import type { RelationshipType, CommunityOrganization } from './user.js';
+import type {
+    RelationshipType,
+    CommunityOrganization
+}                           from './familyMember.js';
+import type { FamilyEvent } from './family.js';
+import type { EventConfig } from './event.js';
+import type { User }        from './user.js';
+import type { Product }     from './product.js';
+
 
 export type OrderStatus = 'PENDING' | 'COMPLETED' | 'CANCELLED';
+
 
 export interface FamilyMemberSnapshot {
     rut              : string;
@@ -14,6 +19,7 @@ export interface FamilyMemberSnapshot {
     is_representative: boolean;
 }
 
+
 export interface OrderItem {
     id               : string;
     order_id         : string;
@@ -22,6 +28,7 @@ export interface OrderItem {
     is_minor_portion : boolean;
     product?         : Product;
 }
+
 
 export interface Order {
     id                  : string;
