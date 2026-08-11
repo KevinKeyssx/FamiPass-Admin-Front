@@ -12,7 +12,7 @@
 	import Button                       from '$lib/components/ui/Button.svelte';
 	import Modal                        from '$lib/components/ui/Modal.svelte';
 	import Select                       from '$lib/components/ui/Select.svelte';
-    import { roleOptions }              from './utils/contants';
+    import { roleOptions }              from './utils/constants';
 
 
     interface Props {

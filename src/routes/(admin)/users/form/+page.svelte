@@ -6,7 +6,7 @@
 	import { ArrowLeft, User, Building, AlertCircle } from '@lucide/svelte';
 
 	import type { User as UserType, UserRole }  from '$lib/types/index.js';
-	import { getFilteredRoleOptions }           from '../utils/contants';
+	import { getFilteredRoleOptions }           from '../utils/constants';
 	import Button                               from '$lib/components/ui/Button.svelte';
 	import InputText                            from '$lib/components/ui/InputText.svelte';
 	import Select                               from '$lib/components/ui/Select.svelte';

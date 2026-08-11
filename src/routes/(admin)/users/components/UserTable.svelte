@@ -4,7 +4,7 @@
 	import {
 		getRoleBadgeStyles,
 		getRoleLabel
-	}                       from '../utils/contants';
+	}                       from '../utils/constants';
 	import type { User }    from '$lib/types/index.js';
 
 
