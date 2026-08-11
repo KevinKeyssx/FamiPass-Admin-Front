@@ -2,7 +2,7 @@
 	import { CalendarDays, Clock, Users, UserPlus } from '@lucide/svelte';
 
 	import type { EventConfig } from '$lib/types/index.js';
-	import Preview              from './Preview.svelte';
+	import Preview              from '$lib/components/shared/Preview.svelte';
 	import Status               from './Status.svelte';
 	import Actions              from '$lib/components/shared/Actions.svelte';
 
@@ -133,7 +133,7 @@
 					</span>
 
 					<div class="flex items-center gap-1.5">
-						<Preview id={ event.id } />
+						<Preview href={ `/events/${ event.id }` } />
 
 						<Actions
 							editHref    = "/events/form?id={ event.id }"
