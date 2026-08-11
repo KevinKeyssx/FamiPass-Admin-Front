@@ -1,4 +1,4 @@
-﻿<script lang="ts">
+<script lang="ts">
 	import { onMount, onDestroy } from 'svelte';
 	import QRCodeStyling          from 'qr-code-styling';
 	import { theme }              from '$lib/stores/theme.svelte.js';
@@ -31,24 +31,10 @@
 		return familyEvent.family?.members?.map( ( m ) => ( {
 			rut              : m.rut,
 			full_name        : m.full_name,
-			relationship     : m.relationship ?? 'OTRO',
 			organization     : m.organization,
 			is_representative: m.is_representative,
 		} ) ) ?? [];
 	} );
-
-	const relationshipLabel: Record<string, string> = {
-		PADRE   : 'Padre',
-		MADRE   : 'Madre',
-		HIJO    : 'Hijo/a',
-		HERMANO : 'Hermano/a',
-		ABUELO  : 'Abuelo/a',
-		CONYUGE : 'Cónyuge',
-		NIETO   : 'Nieto/a',
-		TIO     : 'Tío/a',
-		INVITADO: 'Invitado/a',
-		OTRO    : 'Otro',
-	};
 
 	function formatDate( d: string ): string {
 		return new Date( d ).toLocaleDateString( 'es-CL', {
@@ -159,9 +145,6 @@
 							{/if}
 							<span class="text-sm text-(--text-primary) font-medium truncate">
 								{member.full_name}
-							</span>
-							<span class="text-xs text-(--text-muted) flex-shrink-0">
-								{relationshipLabel[ member.relationship ] ?? member.relationship}
 							</span>
 						</li>
 					{/each}
