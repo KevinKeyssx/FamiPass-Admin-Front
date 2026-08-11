@@ -10,19 +10,6 @@ export type CommunityOrganization =
     | 'NINGUNA';
 
 
-export type RelationshipType =
-    | 'PADRE'
-    | 'MADRE'
-    | 'HIJO'
-    | 'HERMANO'
-    | 'ABUELO'
-    | 'CONYUGE'
-    | 'NIETO'
-    | 'TIO'
-    | 'INVITADO'
-    | 'OTRO';
-
-
 export interface FamilyMember {
     id                  : string;
     family_id           : string;
@@ -30,7 +17,6 @@ export interface FamilyMember {
     rut                 : string;
     phone?              : string | null;
     organization        : CommunityOrganization;
-    relationship        : RelationshipType;
     is_representative   : boolean;
     created_at?         : string;
     updated_at?         : string;
