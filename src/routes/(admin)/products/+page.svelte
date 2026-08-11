@@ -1,6 +1,6 @@
 <script lang="ts">
-	import { deserialize } from '$app/forms';
-	import { page } from '$app/state';
+	import { deserialize }      from '$app/forms';
+	import { page }             from '$app/state';
 	import { goto, invalidate } from '$app/navigation';
 
     import { Plus, Search, Funnel } from '@lucide/svelte';
