@@ -36,7 +36,6 @@
 		type={ "text" }
 		{ id }
 		{ placeholder }
-		{ required }
 		{ disabled }
 		bind:value={ value }
 		class="w-full px-4 py-2.5 rounded-xl border transition-all duration-300
