@@ -1,12 +1,10 @@
 <script lang="ts">
-	import { page }  from '$app/state';
+	import { page } from '$app/state';
+	import { LogOut, LayoutDashboard, CalendarDays, Package, Users } from '@lucide/svelte';
 
-    import {  LogOut, LayoutDashboard, CalendarDays, Package } from '@lucide/svelte';
+	import ToggleTheme from './ToggleTheme.svelte';
 
-    import ToggleTheme from './ToggleTheme.svelte';
-
-
-    interface Props {
+	interface Props {
 		sidebarOpen   : boolean;
 		toggleSidebar : () => void;
 		handleLogout  : () => Promise<void>;
@@ -18,18 +16,16 @@
 		} | null;
 	}
 
+	let { sidebarOpen, toggleSidebar, handleLogout, data } : Props = $props();
 
-    let { sidebarOpen, toggleSidebar, handleLogout, data } : Props = $props();
-
-
-    const navItems = [
+	const navItems = [
 		{ href: '/dashboard', label: 'Dashboard', Icon: LayoutDashboard },
 		{ href: '/events',    label: 'Eventos',   Icon: CalendarDays },
-		{ href: '/products',  label: 'Productos', Icon: Package }
+		{ href: '/products',  label: 'Productos', Icon: Package },
+		{ href: '/users',     label: 'Usuarios',  Icon: Users }
 	];
 
-
-    const currentPath = $derived( page.url.pathname );
+	const currentPath = $derived( page.url.pathname );
 </script>
 
 <!-- ── Sidebar Overlay (mobile) ── -->
@@ -57,7 +53,7 @@
 			<span class="text-(--accent-text) font-bold text-lg">F</span>
 		</div>
 
-        <div>
+		<div>
 			<p class="font-bold text-(--text-primary) leading-tight transition-colors group-hover/logo:text-(--accent)">FamiPass</p>
 			<p class="text-xs text-(--text-muted)">Admin Panel</p>
 		</div>
@@ -82,9 +78,9 @@
                         {isActive ? 'text-(--accent)' : 'text-(--text-muted)'}"
 				/>
 
-                {label}
+				{label}
 
-                {#if isActive}
+				{#if isActive}
 					<span class="ml-auto w-1.5 h-1.5 rounded-full bg-(--accent) animate-pulse"></span>
 				{/if}
 			</a>
@@ -100,27 +96,24 @@
 				</span>
 			</div>
 
-            <div class="min-w-0">
-				<p class="text-sm font-medium text-(--text-primary) truncate transition-colors group-hover/user:text-(--accent)">{data?.user?.name ?? 'Admin'}</p>
-
-                <p class="text-xs text-(--text-muted) truncate">
-                    {data?.user?.email ?? ''}
-                </p>
+			<div class="truncate">
+				<p class="text-xs font-semibold text-(--text-primary) truncate">{ data?.user?.name ?? 'Admin' }</p>
+				<p class="text-[10px] text-(--text-secondary) truncate">{ data?.user?.email ?? '' }</p>
 			</div>
 		</div>
 
-        <div class="flex items-center gap-2">
-            <button
-                onclick={ handleLogout }
-                class="w-full flex items-center gap-2 px-3 py-2 rounded-xl text-sm
+		<div class="flex items-center gap-2">
+			<button
+				onclick={ handleLogout }
+				class="w-full flex items-center gap-2 px-3 py-2 rounded-xl text-sm
                     text-(--text-secondary) hover:text-red-500 hover:bg-red-500/10
                     transition-all duration-300 group/btn"
-            >
-                <LogOut size={16} class="transition-transform duration-300 group-hover/btn:-translate-x-0.5" />
-                Cerrar sesión
-            </button>
+			>
+				<LogOut size={16} class="transition-transform duration-300 group-hover/btn:-translate-x-0.5" />
+				Cerrar sesión
+			</button>
 
-            <ToggleTheme />
-        </div>
+			<ToggleTheme />
+		</div>
 	</div>
 </aside>
