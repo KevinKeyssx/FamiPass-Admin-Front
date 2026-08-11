@@ -22,7 +22,8 @@
 		{ href: '/dashboard', label: 'Dashboard', Icon: LayoutDashboard },
 		{ href: '/events',    label: 'Eventos',   Icon: CalendarDays },
 		{ href: '/products',  label: 'Productos', Icon: Package },
-		{ href: '/users',     label: 'Usuarios',  Icon: Users }
+		{ href: '/users',     label: 'Usuarios',  Icon: Users },
+		{ href: '/families',  label: 'Familias',  Icon: Users }
 	];
 
 	const currentPath = $derived( page.url.pathname );
