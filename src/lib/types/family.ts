@@ -1,13 +1,15 @@
-import type { User }        from './user.js';
-import type { EventConfig } from './event.js';
+import type { FamilyMember } from './familyMember.js';
+import type { EventConfig }  from './event.js';
 
 export interface Family {
     id          : string;
     family_name : string;
+    code        : number;
     created_at? : string;
     updated_at? : string;
-    members?    : User[];
+    members?    : FamilyMember[];
 }
+
 
 export interface FamilyEvent {
     id           : string;
