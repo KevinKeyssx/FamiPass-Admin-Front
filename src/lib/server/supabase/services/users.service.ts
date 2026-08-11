@@ -1,13 +1,10 @@
 import { supabaseServer } from '../supabase.js';
 
-/**
- * Obtiene el rol de un usuario desde la base de datos de Supabase dado su correo electrónico.
- * 
- * @param email Correo electrónico del usuario.
- * @returns Promesa que se resuelve con el rol del usuario ('ADMIN' | 'STAFF' | 'MEMBER') o null si no se encuentra.
- */
+import type { User, UserRole } from '$lib/types/index.js';
+
+
 export async function getUserRole(
-    email: string
+	email: string
 ): Promise<string | null> {
 	const { data } = await supabaseServer
 		.from( 'users' )
@@ -16,4 +13,103 @@ export async function getUserRole(
 		.single();
 
 	return data?.role ?? null;
+}
+
+export async function getUsers( params?: {
+	search?   : string;
+	role?     : 'ALL' | UserRole;
+	page?     : number;
+	pageSize? : number;
+} ): Promise<{ data: User[]; count: number }> {
+	const search   = params?.search || '';
+	const role     = params?.role || 'ALL';
+	const page     = params?.page || 1;
+	const pageSize = params?.pageSize || 12;
+
+	let query = supabaseServer
+		.from( 'users' )
+		.select( '*', { count: 'exact' } );
+
+	if ( search ) {
+		query = query.or( `full_name.ilike.%${ search }%,email.ilike.%${ search }%` );
+	}
+
+	if ( role && role !== 'ALL' ) {
+		query = query.eq( 'role', role );
+	}
+
+	query = query.order( 'full_name', { ascending: true } );
+
+	const from = ( page - 1 ) * pageSize;
+	const to   = from + pageSize - 1;
+
+	const { data, error, count } = await query.range( from, to );
+
+	if ( error ) {
+		throw new Error( error.message );
+	}
+
+	return {
+		data  : data as User[],
+		count : count || 0
+	};
+}
+
+export async function getUserById( id: string ): Promise<User> {
+	const { data, error } = await supabaseServer
+		.from( 'users' )
+		.select( '*' )
+		.eq( 'id', id )
+		.single();
+
+	if ( error ) {
+		throw new Error( error.message );
+	}
+
+	return data as User;
+}
+
+export async function createUser(
+	user: Omit<User, 'id' | 'created_at' | 'updated_at'>
+): Promise<User> {
+	const { data, error } = await supabaseServer
+		.from( 'users' )
+		.insert( [ user ] )
+		.select()
+		.single();
+
+	if ( error ) {
+		throw new Error( error.message );
+	}
+
+	return data as User;
+}
+
+export async function updateUser(
+	id: string,
+	user: Partial<Omit<User, 'id' | 'created_at' | 'updated_at'>>
+): Promise<User> {
+	const { data, error } = await supabaseServer
+		.from( 'users' )
+		.update( user )
+		.eq( 'id', id )
+		.select()
+		.single();
+
+	if ( error ) {
+		throw new Error( error.message );
+	}
+
+	return data as User;
+}
+
+export async function deleteUser( id: string ): Promise<void> {
+	const { error } = await supabaseServer
+		.from( 'users' )
+		.delete()
+		.eq( 'id', id );
+
+	if ( error ) {
+		throw new Error( error.message );
+	}
 }
