@@ -3,4 +3,4 @@ export type { UserRole, User }                                          from './
 export type { Family, FamilyEvent }                                     from './family.js';
 export type { Product }                                                 from './product.js';
 export type { OrderStatus, FamilyMemberSnapshot, OrderItem, Order }     from './order.js';
-export type { CommunityOrganization, RelationshipType, FamilyMember }   from './familyMember.js';
+export type { CommunityOrganization, FamilyMember }   from './familyMember.js';
