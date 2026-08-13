@@ -9,6 +9,7 @@
 		required?    : boolean;
 		id?          : string;
 		disabled?    : boolean;
+		size?        : 'small' | 'normal';
 	}
 
 	let {
@@ -18,7 +19,8 @@
 		placeholder = '',
 		required    = false,
 		id          = '',
-		disabled    = false
+		disabled    = false,
+		size        = 'normal'
 	} : Props = $props();
 </script>
 
@@ -38,9 +40,10 @@
 		{ placeholder }
 		{ disabled }
 		bind:value={ value }
-		class="w-full px-4 py-2.5 rounded-xl border transition-all duration-300
+		class="w-full border transition-all duration-300
 		       bg-bg-surface-2 text-text-primary placeholder:text-text-muted
 		       focus:outline-none focus:border-accent focus:ring-4 focus:ring-accent/10
+		       { size === 'small' ? 'px-3 py-1.5 rounded-lg text-xs' : 'px-4 py-2.5 rounded-xl text-sm' }
 		       { error
 		           ? 'border-red-500 focus:border-red-500 focus:ring-red-500/10'
 		           : 'border-border hover:border-accent/40' }
