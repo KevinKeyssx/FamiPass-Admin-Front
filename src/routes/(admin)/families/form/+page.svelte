@@ -57,9 +57,6 @@
 		organization      : CommunityOrganization;
 		is_representative : boolean;
 	} ): void {
-		if ( data.is_representative ) {
-			members = members.map( ( m ) => ( { ...m, is_representative: false } ) );
-		}
 		members = [ ...members, data ];
 		showMemberModal = false;
 	}
