@@ -51,16 +51,6 @@ export const actions: Actions = {
 		}
 
 		try {
-			// Si el nuevo miembro es representante, desactivamos a cualquier otro miembro que lo sea
-			if ( isRepresentative ) {
-				const existingMembers = await getFamilyMembers( params.id );
-				for ( const m of existingMembers ) {
-					if ( m.is_representative && m.id !== memberId ) {
-						await updateFamilyMember( m.id, { is_representative: false } );
-					}
-				}
-			}
-
 			if ( memberId ) {
 				const memberData: Partial<Omit<FamilyMember, 'id' | 'family_id' | 'created_at' | 'updated_at' | 'family'>> = {
 					full_name         : fullName.trim(),
