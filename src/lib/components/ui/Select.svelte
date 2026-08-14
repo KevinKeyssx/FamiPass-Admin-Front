@@ -71,25 +71,27 @@
 				/>
 			</Select.Trigger>
 
-			<Select.Content
-				class="z-50 rounded-2xl border border-border bg-bg-surface p-1.5 shadow-lg animate-in fade-in duration-200 w-(--bits-select-anchor-width) min-w-48 max-h-60 overflow-y-auto"
-				sideOffset={ 4 }
-			>
-				{#each options as opt}
-					<Select.Item
-						value={ opt.value }
-						label={ opt.label }
-						class="flex items-center justify-between transition-colors cursor-pointer select-none text-text-primary hover:bg-bg-surface-2 data-selected:bg-accent-muted data-selected:text-accent
-                            { size === 'small' ? 'px-2 py-1.5 rounded-lg text-xs' : 'px-3 py-2 rounded-xl text-sm' }"
-					>
-						{ opt.label }
+			<Select.Portal>
+				<Select.Content
+					class="z-50 rounded-2xl border border-border bg-bg-surface p-1.5 shadow-lg animate-in fade-in duration-200 w-(--bits-select-anchor-width) min-w-48 max-h-60 overflow-y-auto"
+					sideOffset={ 4 }
+				>
+					{#each options as opt}
+						<Select.Item
+							value={ opt.value }
+							label={ opt.label }
+							class="flex items-center justify-between transition-colors cursor-pointer select-none text-text-primary hover:bg-bg-surface-2 data-selected:bg-accent-muted data-selected:text-accent
+								{ size === 'small' ? 'px-2 py-1.5 rounded-lg text-xs' : 'px-3 py-2 rounded-xl text-sm' }"
+						>
+							{ opt.label }
 
-						{#if value === opt.value}
-							<Check size={ size === 'small' ? 14 : 16 } class="text-accent shrink-0" />
-						{/if}
-					</Select.Item>
-				{/each}
-			</Select.Content>
+							{#if value === opt.value}
+								<Check size={ size === 'small' ? 14 : 16 } class="text-accent shrink-0" />
+							{/if}
+						</Select.Item>
+					{/each}
+				</Select.Content>
+			</Select.Portal>
 		</div>
 
 		{#if error}
