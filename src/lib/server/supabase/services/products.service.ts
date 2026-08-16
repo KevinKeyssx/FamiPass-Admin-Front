@@ -69,10 +69,9 @@ export async function createProduct(
 	const { data, error } = await supabaseServer
 		.from( 'products' )
 		.insert( {
-			name                        : body.name,
-			description                 : body.description ?? null,
-			default_quantity_per_person : body.default_quantity_per_person,
-			is_active                   : body.is_active ?? true
+			name        : body.name,
+			description : body.description ?? null,
+			is_active   : body.is_active ?? true
 		} )
 		.select()
 		.single();
