@@ -43,19 +43,7 @@
 				</div>
 
 				<!-- Content / Info Grid -->
-				<div class="grid grid-cols-2 gap-2.5 my-1 text-xs relative z-10">
-					<!-- Cantidad por persona -->
-					<div class="bg-(--bg-base)/40 dark:bg-black/10 border border-(--border)/30 p-2.5 rounded-xl flex items-center gap-3 transition-all duration-200 hover:bg-(--bg-base)/60 dark:hover:bg-black/20 group/item">
-						<div class="p-2 rounded-lg bg-(--accent-muted) text-(--accent) shrink-0 transition-transform group-hover/item:scale-110">
-							<Package size={ 14 } />
-						</div>
-
-                        <div class="truncate">
-							<p class="text-[9px] text-(--text-secondary) font-bold uppercase tracking-wider leading-none">Cant. Persona</p>
-							<p class="font-semibold text-(--text-primary) mt-1 leading-none">{ product.default_quantity_per_person }</p>
-						</div>
-					</div>
-
+				<div class="grid grid-cols-1 gap-2.5 my-1 text-xs relative z-10">
 					<!-- Estado -->
 					<div class="bg-(--bg-base)/40 dark:bg-black/10 border border-(--border)/30 p-2.5 rounded-xl flex items-center gap-3 transition-all duration-200 hover:bg-(--bg-base)/60 dark:hover:bg-black/20 group/item">
 						{#if product.is_active }
