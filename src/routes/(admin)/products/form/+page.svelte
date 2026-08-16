@@ -9,7 +9,6 @@
 	import Button           from '$lib/components/ui/Button.svelte';
 	import Modal            from '$lib/components/ui/Modal.svelte';
 	import InputText        from '$lib/components/ui/InputText.svelte';
-	import InputNumber      from '$lib/components/ui/InputNumber.svelte';
 	import Checkbox         from '$lib/components/ui/Checkbox.svelte';
 
 
@@ -27,20 +26,18 @@
 	const isEdit    = $derived( !!productId );
 
 
-    interface FormState {
-		name                        : string;
-		description                 : string;
-		default_quantity_per_person : number;
-		is_active                   : boolean;
+	interface FormState {
+		name        : string;
+		description : string;
+		is_active   : boolean;
 	}
 
-    // svelte-ignore state_referenced_locally
+	// svelte-ignore state_referenced_locally
 	let form = $state<FormState>( {
-		name                        : data.product?.name                        ?? '',
-		description                 : data.product?.description                 ?? '',
-		default_quantity_per_person : data.product?.default_quantity_per_person ?? 1,
-		is_active                   : data.product?.is_active                   ?? true
-	});
+		name        : data.product?.name        ?? '',
+		description : data.product?.description ?? '',
+		is_active   : data.product?.is_active   ?? true
+	} );
 
 
     let errorMsg        = $state<string | null>( null );
@@ -48,10 +45,9 @@
 	let deleteModalOpen = $state( false );
 	let deleteError     = $state<string | null>( null );
 	let isDeleting      = $state( false );
-	let errors          = $state<Record<string, string | null>>({
-		name                        : null,
-		default_quantity_per_person : null
-	});
+	let errors = $state<Record<string, string | null>>( {
+		name : null
+	} );
 
 
     async function handleSubmit( e: SubmitEvent ): Promise<void> {
@@ -60,8 +56,7 @@
         errorMsg = null;
 
 		errors = {
-			name                        : null,
-			default_quantity_per_person : null
+			name : null
 		};
 
 		let hasError = false;
@@ -69,11 +64,6 @@
 		if ( !form.name.trim() ) {
 			errors.name = 'El nombre del producto es requerido.';
 			hasError    = true;
-		}
-
-		if ( form.default_quantity_per_person == null || form.default_quantity_per_person < 0 ) {
-			errors.default_quantity_per_person = 'La cantidad debe ser 0 o superior.';
-			hasError = true;
 		}
 
 		if ( hasError ) return;
@@ -84,7 +74,6 @@
 
         formData.append( 'name', form.name.trim() );
 		formData.append( 'description', form.description.trim() );
-		formData.append( 'default_quantity_per_person', String( form.default_quantity_per_person ) );
 		formData.append( 'is_active', String( form.is_active ) );
 
 		const actionUrl = isEdit ? `?id=${ productId }&/save` : '?/save';
@@ -233,28 +222,14 @@
 					</h2>
 				</div>
 
-				<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-					<!-- Default Quantity -->
-					<InputNumber
-						required
-						bind:value={ form.default_quantity_per_person }
-						label       = "Cantidad por Persona"
-						min         = { 0 }
-						step        = { 1 }
-						placeholder = "0"
-						error       = { errors.default_quantity_per_person }
-						disabled    = { isSaving }
-					/>
-
+				<div class="grid grid-cols-1 gap-6">
 					<!-- Status Switch -->
-					<div class="flex flex-col justify-end">
-						<Checkbox
-							bind:checked={ form.is_active }
-							label="Producto Activo"
-							description="Indica si el producto estará disponible para nuevos eventos."
-							disabled={ isSaving }
-						/>
-					</div>
+					<Checkbox
+						bind:checked={ form.is_active }
+						label="Producto Activo"
+						description="Indica si el producto estará disponible para nuevos eventos."
+						disabled={ isSaving }
+					/>
 				</div>
 			</div>
 		</div>
