@@ -11,7 +11,7 @@ export async function getEvents( params?: {
 	minors?       : 'ALL' | 'TRUE' | 'FALSE';
 	page?         : number;
 	pageSize?     : number;
-} ): Promise<{ data: EventConfig[]; count: number }> {
+}): Promise<{ data: EventConfig[]; count: number }> {
 	const search       = params?.search || '';
 	const date         = params?.date || '';
 	const status       = params?.status || 'ALL';
@@ -61,6 +61,7 @@ export async function getEvents( params?: {
 	};
 }
 
+
 export async function getEventById( id: string ): Promise<any | null> {
 	const { data, error } = await supabaseServer
 		.from( 'events' )
@@ -68,7 +69,7 @@ export async function getEventById( id: string ): Promise<any | null> {
 			*,
 			family_events (
 				*,
-				family:families ( *, members:users ( * ) ),
+				family:families ( *, members:family_members ( * ) ),
 				orders (
 					*,
 					items:order_items ( *, product:products ( * ) )
@@ -87,6 +88,7 @@ export async function getEventById( id: string ): Promise<any | null> {
 
 	return data;
 }
+
 
 export async function createEvent(
 	body: Omit<EventConfig, 'id' | 'created_at' | 'updated_at'>
@@ -113,6 +115,7 @@ export async function createEvent(
 	return data as EventConfig;
 }
 
+
 export async function updateEvent(
 	id: string,
 	body: Partial<Omit<EventConfig, 'id' | 'created_at' | 'updated_at'>>
@@ -131,6 +134,7 @@ export async function updateEvent(
 	return data as EventConfig;
 }
 
+
 export async function deleteEvent( id: string ): Promise<void> {
 	const { data: event, error: fetchError } = await supabaseServer
 		.from( 'events' )
@@ -148,6 +152,32 @@ export async function deleteEvent( id: string ): Promise<void> {
 
 	const { error } = await supabaseServer
 		.from( 'events' )
+		.delete()
+		.eq( 'id', id );
+
+	if ( error ) {
+		throw new Error( error.message );
+	}
+}
+
+
+export async function addFamilyToEvent( eventId: string, familyId: string ): Promise<void> {
+	const { error } = await supabaseServer
+		.from( 'family_events' )
+		.insert({
+			event_id    : eventId,
+			family_id   : familyId,
+		});
+
+	if ( error ) {
+		throw new Error( error.message );
+	}
+}
+
+
+export async function removeFamilyFromEvent( id: string ): Promise<void> {
+	const { error } = await supabaseServer
+		.from( 'family_events' )
 		.delete()
 		.eq( 'id', id );
 
