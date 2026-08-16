@@ -27,30 +27,18 @@ export const actions: Actions = {
 		const formData = await request.formData();
 		const id       = url.searchParams.get( 'id' );
 
-		const name                        = formData.get( 'name' ) as string | null;
-		const description                 = formData.get( 'description' ) as string | null;
-		const default_quantity_per_person = formData.get( 'default_quantity_per_person' ) as string | null;
-		const is_active                   = formData.get( 'is_active' ) === 'true';
+		const name        = formData.get( 'name' ) as string | null;
+		const description = formData.get( 'description' ) as string | null;
+		const is_active   = formData.get( 'is_active' ) === 'true';
 
 		if ( !name?.trim() ) {
 			return fail( 400, { error: 'El nombre del producto es requerido.' } );
 		}
 
-		if ( !default_quantity_per_person || isNaN( Number( default_quantity_per_person ) ) ) {
-			return fail( 400, { error: 'La cantidad por persona es requerida y debe ser numérica.' } );
-		}
-
-		const qty = Number( default_quantity_per_person );
-
-        if ( qty < 0 ) {
-			return fail( 400, { error: 'La cantidad por persona no puede ser negativa.' } );
-		}
-
 		const body: Omit<Product, 'id' | 'created_at' | 'updated_at'> = {
-			name                        : name.trim(),
-			description                 : description?.trim() || undefined,
-			default_quantity_per_person : qty,
-			is_active                   : is_active
+			name        : name.trim(),
+			description : description?.trim() || undefined,
+			is_active   : is_active
 		};
 
 		try {
