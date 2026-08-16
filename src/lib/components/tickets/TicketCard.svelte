@@ -3,18 +3,27 @@
 	import QRCodeStyling          from 'qr-code-styling';
 	import { theme }              from '$lib/stores/theme.svelte.js';
 	import type { FamilyEvent, Order } from '$lib/types/index.js';
-	import { Crown, User as UserIcon, Users, ShoppingBasket } from '@lucide/svelte';
+	import { Crown, User as UserIcon, Users, ShoppingBasket, Trash2 } from '@lucide/svelte';
+	import Modal                  from '$lib/components/ui/Modal.svelte';
+	import { deserialize }        from '$app/forms';
+	import { invalidate }         from '$app/navigation';
 
 	interface Props {
-		familyEvent : FamilyEvent;
+		familyEvent : FamilyEvent & { orders?: Order[] };
 		order?      : Order | null;
 		staffUrl    : string;
 	}
 
 	let { familyEvent, order = null, staffUrl }: Props = $props();
 
-	let qrContainer = $state<HTMLDivElement | null>( null );
-	let qrInstance  : QRCodeStyling | null = null;
+	let qrContainer     = $state<HTMLDivElement | null>( null );
+	let qrInstance      : QRCodeStyling | null = null;
+	let deleteModalOpen = $state( false );
+	let isDeleting      = $state( false );
+	let deleteError     = $state<string | null>( null );
+
+	const ordersTaken = $derived( familyEvent.orders?.length ?? 0 );
+	const maxOrders   = $derived( familyEvent.family?.members?.length ?? 0 );
 
 	const qrUrl = $derived(
 		familyEvent.qr_code_hash
@@ -23,6 +32,36 @@
 	);
 
 	const accentColor = $derived( theme.isDark ? '#F59E0B' : '#00B4D8' );
+
+	async function confirmDelete(): Promise<void> {
+		isDeleting  = true;
+		deleteError = null;
+
+		const formData = new FormData();
+		formData.append( 'familyEventId', familyEvent.id );
+
+		try {
+			const response = await fetch( '?/removeFamily', {
+				method : 'POST',
+				body   : formData
+			} );
+
+			const result = deserialize( await response.text() );
+
+			if ( result.type === 'success' ) {
+				await invalidate( 'app:event' );
+				deleteModalOpen = false;
+			} else if ( result.type === 'failure' ) {
+				deleteError = ( result.data as any )?.error || 'Error al eliminar la familia del evento';
+			} else {
+				deleteError = 'Ocurrió un error inesperado';
+			}
+		} catch ( err: any ) {
+			deleteError = err.message;
+		} finally {
+			isDeleting = false;
+		}
+	}
 
 	const members = $derived( () => {
 		if ( order?.family_members && order.family_members.length > 0 ) {
@@ -100,19 +139,43 @@
 					{familyEvent.family?.family_name ?? 'Familia'}
 				</h3>
 			</div>
-			{#if order}
-				<span class="flex-shrink-0 px-2.5 py-1 rounded-full text-xs font-bold
-				             {order.status === 'COMPLETED'
-				                 ? 'bg-green-400/20 text-green-100'
-				                 : order.status === 'PENDING'
-				                     ? 'bg-yellow-400/20 text-yellow-100'
-				                     : 'bg-red-400/20 text-red-100'}">
-					{order.status === 'COMPLETED' ? 'Completada' : order.status === 'PENDING' ? 'Pendiente' : 'Cancelada'}
-				</span>
-			{/if}
+
+			<div class="flex items-center gap-2 shrink-0">
+				{#if order}
+					<span class="px-2.5 py-1 rounded-full text-xs font-bold
+					             {order.status === 'COMPLETED'
+					                 ? 'bg-green-400/20 text-green-100'
+					                 : order.status === 'PENDING'
+					                     ? 'bg-yellow-400/20 text-yellow-100'
+					                     : 'bg-red-400/20 text-red-100'}">
+						{order.status === 'COMPLETED' ? 'Completada' : order.status === 'PENDING' ? 'Pendiente' : 'Cancelada'}
+					</span>
+				{/if}
+
+				<button
+					type="button"
+					onclick={ () => deleteModalOpen = true }
+					disabled={ ordersTaken > 0 }
+					class="p-1.5 rounded-lg text-white/80 hover:text-red-200 hover:bg-white/10 disabled:opacity-40 disabled:hover:text-white/80 disabled:hover:bg-transparent transition-colors"
+					title={ ordersTaken > 0 ? 'No se puede eliminar la familia porque ya tiene órdenes registradas' : 'Eliminar familia del evento' }
+				>
+					<Trash2 size={ 16 } />
+				</button>
+			</div>
 		</div>
 		{#if familyEvent.event?.event_date}
-			<p class="text-white/80 text-xs mt-2">{formatDate( familyEvent.event.event_date )}</p>
+			<div class="flex items-center justify-between mt-2">
+				<p class="text-white/80 text-xs">{ formatDate( familyEvent.event.event_date ) }</p>
+				<span class="text-white/90 text-xs font-semibold bg-white/10 px-2 py-0.5 rounded-md">
+					Órdenes: { ordersTaken } / { maxOrders }
+				</span>
+			</div>
+		{:else}
+			<div class="flex justify-end mt-2">
+				<span class="text-white/90 text-xs font-semibold bg-white/10 px-2 py-0.5 rounded-md">
+					Órdenes: { ordersTaken } / { maxOrders }
+				</span>
+			</div>
 		{/if}
 	</div>
 
@@ -202,4 +265,20 @@
 	</div>
 
 </article>
+
+<Modal
+	open={ deleteModalOpen }
+	onClose={ () => deleteModalOpen = false }
+	onConfirm={ confirmDelete }
+	title="Desasociar Familia"
+	confirmLabel="Desasociar"
+	confirmVariant="danger"
+	loading={ isDeleting }
+>
+	<p class="text-sm">¿Estás seguro de que deseas desasociar a la familia <strong class="text-(--text-primary)">"{ familyEvent.family?.family_name }"</strong> de este evento?</p>
+	<p class="mt-2 text-xs text-(--text-muted)">Esta acción eliminará el ticket familiar y su código QR. No se puede deshacer.</p>
+	{#if deleteError}
+		<p class="mt-3 text-red-500 text-sm font-medium">{ deleteError }</p>
+	{/if}
+</Modal>
 
