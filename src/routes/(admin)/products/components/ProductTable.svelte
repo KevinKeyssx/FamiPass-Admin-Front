@@ -30,7 +30,6 @@
 					<tr class="border-b border-(--border) bg-(--bg-surface-2)">
 						<th class="text-left px-4 py-3 font-semibold text-(--text-secondary)">Nombre</th>
 						<th class="text-left px-4 py-3 font-semibold text-(--text-secondary) hidden sm:table-cell">Descripción</th>
-						<th class="text-center px-4 py-3 font-semibold text-(--text-secondary) hidden md:table-cell">Cant. por Persona</th>
 						<th class="text-left px-4 py-3 font-semibold text-(--text-secondary)">Estado</th>
 						<th class="text-right px-4 py-3 font-semibold text-(--text-secondary)">Acciones</th>
 					</tr>
@@ -46,10 +45,6 @@
                             <td class="px-4 py-3 text-(--text-secondary) hidden sm:table-cell truncate max-w-64">
 								{ product.description ?? '—' }
 							</td>
-
-                            <td class="px-4 py-3 text-(--text-primary) hidden md:table-cell text-center font-medium">
-								{ product.default_quantity_per_person }
-                            </td>
 
                             <td class="px-4 py-3">
 								{#if product.is_active }
