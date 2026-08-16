@@ -11,6 +11,7 @@
 		placeholder? : string;
 		required?    : boolean;
 		id?          : string;
+		name?        : string;
 		disabled?    : boolean;
 	}
 
@@ -24,6 +25,7 @@
 		placeholder = '',
 		required    = false,
 		id          = '',
+		name        = '',
 		disabled    = false
 	} : Props = $props();
 
@@ -72,6 +74,7 @@
 		<input
 			type={ "number" }
 			{ id }
+			{ name }
 			{ min }
 			{ max }
 			{ step }
