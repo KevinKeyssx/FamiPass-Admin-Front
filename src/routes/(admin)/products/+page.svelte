@@ -140,7 +140,7 @@
 		<div>
 			<h1 class="text-2xl font-bold text-(--text-primary)">Productos</h1>
 
-            <p class="text-(--text-secondary) mt-1 text-sm">Gestión del catálogo de productos y cantidades predeterminadas</p>
+            <p class="text-(--text-secondary) mt-1 text-sm">Gestión del catálogo de productos de FamiPass</p>
 		</div>
 
 		<div class="flex items-center gap-3 self-end sm:self-auto">
