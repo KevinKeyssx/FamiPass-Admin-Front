@@ -5,9 +5,10 @@ import {
 	getEventById,
 	addFamilyToEvent,
 	removeFamilyFromEvent
-}                       from '$lib/server/supabase/services/events.service.js';
-import { getFamilies }  from '$lib/server/supabase/services/families.service.js';
-import type { Family }  from '$lib/types/index.js';
+}                           from '$lib/server/supabase/services/events.service.js';
+import { getFamilies }      from '$lib/server/supabase/services/families.service.js';
+import type { Family }      from '$lib/types/index.js';
+import { isEventExpired }   from '$lib/utils/date.js';
 
 
 export const load: PageServerLoad = async ( { params, url, depends } ) => {
@@ -55,6 +56,16 @@ export const load: PageServerLoad = async ( { params, url, depends } ) => {
 
 export const actions: Actions = {
 	addFamily: async ( { request, params } ) => {
+		const event = await getEventById( params.id );
+
+		if ( !event ) {
+			return fail( 404, { error: 'Evento no encontrado' } );
+		}
+
+		if ( event.expires_at && isEventExpired( event.expires_at ) ) {
+			return fail( 400, { error: 'El evento ha expirado y no se pueden asociar familias.' } );
+		}
+
 		const formData = await request.formData();
 		const familyId = formData.get( 'familyId' ) as string;
 
@@ -70,7 +81,17 @@ export const actions: Actions = {
 		}
 	},
 
-	removeFamily: async ( { request } ) => {
+	removeFamily: async ( { request, params } ) => {
+		const event = await getEventById( params.id );
+
+		if ( !event ) {
+			return fail( 404, { error: 'Evento no encontrado' } );
+		}
+
+		if ( event.expires_at && isEventExpired( event.expires_at ) ) {
+			return fail( 400, { error: 'El evento ha expirado y no se pueden desasociar familias.' } );
+		}
+
 		const formData      = await request.formData();
 		const familyEventId = formData.get( 'familyEventId' ) as string;
 
@@ -86,3 +107,4 @@ export const actions: Actions = {
 		}
 	}
 };
+
