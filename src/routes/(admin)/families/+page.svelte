@@ -131,17 +131,19 @@
 
 <div class="space-y-6">
 	<!-- Header -->
-	<div class="flex items-center justify-between gap-4">
-		<div>
-			<h1 class="text-3xl font-extrabold bg-linear-to-r from-text-primary to-accent bg-clip-text text-transparent tracking-tight">
+	<div class="header-banner group">
+		<div class="header-glow"></div>
+
+		<div class="space-y-1 relative z-10">
+			<h1 class="text-2xl font-extrabold bg-linear-to-r from-text-primary via-accent to-accent bg-clip-text text-transparent tracking-tight">
 				Familias
 			</h1>
-			<p class="text-sm text-text-secondary mt-1">
+			<p class="text-xs text-(--text-secondary) mt-0.5">
 				Administra y gestiona los grupos familiares y sus miembros
 			</p>
 		</div>
 
-		<div class="flex items-center gap-3">
+		<div class="flex items-center gap-3 relative z-10 shrink-0">
 			<ViewSwitcher />
 
 			<a href="/families/form">
@@ -154,7 +156,7 @@
 	</div>
 
 	<!-- Filtros -->
-	<div class="p-4 rounded-2xl bg-zinc-100/20 dark:bg-zinc-950/20 border border-border/80 flex flex-col md:flex-row gap-4 items-center justify-between">
+	<div class="form-card !p-4 !space-y-0 flex flex-col md:flex-row gap-4 items-center justify-between">
 		<div class="relative w-full md:max-w-md">
 			<Search size={ 16 } class="absolute left-3.5 top-1/2 -translate-y-1/2 text-text-muted pointer-events-none" />
 			<input

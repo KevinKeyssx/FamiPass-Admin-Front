@@ -136,17 +136,22 @@
 
 <div class="space-y-6">
 	<!-- Header -->
-	<div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-		<div>
-			<h1 class="text-2xl font-bold text-(--text-primary)">Productos</h1>
+	<div class="header-banner group">
+		<div class="header-glow"></div>
 
-            <p class="text-(--text-secondary) mt-1 text-sm">Gestión del catálogo de productos de FamiPass</p>
+		<div class="space-y-1 relative z-10">
+			<h1 class="text-2xl font-extrabold bg-linear-to-r from-text-primary via-accent to-accent bg-clip-text text-transparent tracking-tight">
+				Productos
+			</h1>
+			<p class="text-xs text-(--text-secondary) mt-0.5">
+				Gestión del catálogo de productos de FamiPass
+			</p>
 		</div>
 
-		<div class="flex items-center gap-3 self-end sm:self-auto">
+		<div class="flex items-center gap-3 relative z-10 shrink-0">
 			<ViewSwitcher />
 
-            <a href="/products/form">
+			<a href="/products/form">
 				<Button variant="primary">
 					<Plus size={ 16 } />
 					Nuevo Producto
