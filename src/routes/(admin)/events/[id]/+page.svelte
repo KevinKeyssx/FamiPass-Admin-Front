@@ -3,9 +3,7 @@
 	import { goto, invalidate } from '$app/navigation';
 	import { deserialize }      from '$app/forms';
 
-    import { ArrowLeft, Pencil, CalendarDays, Users, Search, Plus } from '@lucide/svelte';
-
-    import { isEventExpired }   from '$lib/utils/date.js';
+    import { Pencil, CalendarDays, Users, Search, Plus } from '@lucide/svelte';
 
 
     import type {
@@ -13,12 +11,14 @@
 		FamilyEvent,
 		Order,
 		Family
-	}                   from '$lib/types/index.js';
-	import TicketVerse  from '$lib/components/tickets/TicketVerse.svelte';
-	import StatusBadge  from '$lib/components/ui/StatusBadge.svelte';
-	import Button       from '$lib/components/ui/Button.svelte';
-	import Modal        from '$lib/components/ui/Modal.svelte';
-	import Pagination   from '$lib/components/shared/Pagination.svelte';
+	}                           from '$lib/types/index.js';
+	import TicketVerse          from '$lib/components/tickets/TicketVerse.svelte';
+	import StatusBadge          from '$lib/components/ui/StatusBadge.svelte';
+	import Button               from '$lib/components/ui/Button.svelte';
+	import Modal                from '$lib/components/ui/Modal.svelte';
+	import ButtonBack           from '$lib/components/ui/ButtonBack.svelte';
+	import Pagination           from '$lib/components/shared/Pagination.svelte';
+    import { isEventExpired }   from '$lib/utils/date.js';
 
 
 	interface EventDetail extends EventConfig {
@@ -130,36 +130,36 @@
 
 <div class="space-y-8">
 	<!-- Header -->
-	<div class="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
-		<div class="flex items-start gap-3">
-			<a
-				href="/events"
-				class="mt-1 p-2 rounded-xl text-(--text-muted) hover:text-(--accent) hover:bg-(--accent-muted) transition-all shrink-0"
-				aria-label="Volver"
-			>
-				<ArrowLeft size={ 20 } />
-			</a>
+	<div class="header-banner group">
+		<div class="header-glow"></div>
 
-			<div>
+		<div class="flex items-center gap-3.5 relative z-10">
+			<ButtonBack href="/events" />
+
+			<div class="space-y-1">
 				<div class="flex items-center gap-3 flex-wrap">
-					<h1 class="text-2xl font-bold text-(--text-primary)">{ data.event.event_name }</h1>
+					<h1 class="text-2xl font-extrabold bg-linear-to-r from-text-primary via-accent to-accent bg-clip-text text-transparent tracking-tight leading-none">
+						{ data.event.event_name }
+					</h1>
 
 					<StatusBadge status={ data.event.status } />
 				</div>
 
-				<p class="text-sm text-(--text-secondary) mt-1 flex items-center gap-1.5">
+				<p class="text-xs text-text-secondary flex items-center gap-1.5 mt-0.5">
 					<CalendarDays size={ 14 } />
 					{ formatDate( data.event.event_date ) }
 				</p>
 			</div>
 		</div>
 
-		<a href="/events/form?id={ data.event.id }">
-			<Button variant="secondary">
-				<Pencil size={ 15 } />
-				Editar
-			</Button>
-		</a>
+		<div class="flex gap-3 relative z-10 shrink-0">
+			<a href="/events/form?id={ data.event.id }">
+				<Button variant="secondary">
+					<Pencil size={ 15 } />
+					Editar
+				</Button>
+			</a>
+		</div>
 	</div>
 
 	{#if isExpired}
