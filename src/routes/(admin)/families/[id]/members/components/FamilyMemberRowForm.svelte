@@ -1,12 +1,18 @@
 <script lang="ts">
-	import type { CommunityOrganization } from '$lib/types/index.js';
-	import { orgOptions }                 from '../../../utils/constants.js';
-	import InputText                      from '$lib/components/ui/InputText.svelte';
-	import Select                         from '$lib/components/ui/Select.svelte';
-	import { Checkbox }                   from 'bits-ui';
-	import { Check, X, Plus }             from '@lucide/svelte';
+	import {
+        validateRut,
+        validatePhone,
+        formatPhone
+    }                                       from '$lib/utils/validation.js';
+	import type { CommunityOrganization }   from '$lib/types/index.js';
+	import { orgOptions }                   from '../../../utils/constants.js';
+	import InputText                        from '$lib/components/ui/InputText.svelte';
+	import Select                           from '$lib/components/ui/Select.svelte';
+	import { Checkbox }                     from 'bits-ui';
+	import { Check, X, Plus }               from '@lucide/svelte';
 
-	interface Props {
+
+    interface Props {
 		onSubmit : ( data: {
 			full_name         : string;
 			rut               : string;
@@ -17,20 +23,24 @@
 		isSaving? : boolean;
 	}
 
-	let {
+
+    let {
 		onSubmit,
 		isSaving = false
 	}: Props = $props();
 
-	let full_name         = $state( '' );
+
+    let full_name         = $state( '' );
 	let rut               = $state( '' );
 	let phone             = $state( '' );
 	let organization      = $state<CommunityOrganization>( 'NINGUNA' );
 	let is_representative = $state( false );
 
-	let errors = $state<Record<string, string | null>>( {
+
+    let errors = $state<Record<string, string | null>>( {
 		full_name : null,
-		rut       : null
+		rut       : null,
+		phone     : null
 	} );
 
 	async function handleSubmit( e: SubmitEvent ): Promise<void> {
@@ -38,7 +48,8 @@
 
 		errors = {
 			full_name : null,
-			rut       : null
+			rut       : null,
+			phone     : null
 		};
 
 		let hasError = false;
@@ -51,6 +62,14 @@
 		if ( !rut.trim() ) {
 			errors.rut = 'El RUT es requerido.';
 			hasError = true;
+		} else if ( !validateRut( rut ) ) {
+			errors.rut = 'El RUT ingresado no es válido.';
+			hasError = true;
+		}
+
+		if ( phone.trim() && !validatePhone( phone ) ) {
+			errors.phone = 'El teléfono celular debe tener exactamente 9 dígitos.';
+			hasError = true;
 		}
 
 		if ( hasError ) return;
@@ -58,7 +77,7 @@
 		const success = await onSubmit( {
 			full_name         : full_name.trim(),
 			rut               : rut.trim(),
-			phone             : phone.trim() || '',
+			phone             : phone.trim() ? formatPhone( phone ) : '',
 			organization      : organization,
 			is_representative : is_representative
 		} );
@@ -76,7 +95,8 @@
 		is_representative = false;
 		errors            = {
 			full_name : null,
-			rut       : null
+			rut       : null,
+			phone     : null
 		};
 	}
 </script>
@@ -102,8 +122,9 @@
 
 	<td class="px-6 py-3 text-text-secondary">
 		<InputText
-			placeholder="Ej: +56912345678"
+			placeholder="Ej: 912345678"
 			bind:value={ phone }
+			error={ errors.phone }
 			disabled={ isSaving }
 		/>
 	</td>
