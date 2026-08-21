@@ -1,10 +1,18 @@
 <script lang="ts">
-	import type { FamilyMember, CommunityOrganization } from '$lib/types/index.js';
-	import { orgOptions } from '../utils/constants';
-	import InputText      from '$lib/components/ui/InputText.svelte';
-	import Select         from '$lib/components/ui/Select.svelte';
-	import Checkbox       from '$lib/components/ui/Checkbox.svelte';
-	import Button         from '$lib/components/ui/Button.svelte';
+	import type {
+        FamilyMember,
+        CommunityOrganization
+    }                       from '$lib/types/index.js';
+	import {
+        validateRut,
+        validatePhone,
+        formatPhone
+    }                       from '$lib/utils/validation.js';
+	import { orgOptions }   from '../utils/constants';
+	import InputText        from '$lib/components/ui/InputText.svelte';
+	import Select           from '$lib/components/ui/Select.svelte';
+	import Checkbox         from '$lib/components/ui/Checkbox.svelte';
+	import Button           from '$lib/components/ui/Button.svelte';
 
 
 	interface Props {
@@ -41,7 +49,8 @@
 
 	let errors = $state<Record<string, string | null>>( {
 		full_name : null,
-		rut       : null
+		rut       : null,
+		phone     : null
 	} );
 
 
@@ -50,7 +59,8 @@
 
 		errors = {
 			full_name : null,
-			rut       : null
+			rut       : null,
+			phone     : null
 		};
 
 		let hasError = false;
@@ -63,6 +73,14 @@
 		if ( !rut.trim() ) {
 			errors.rut = 'El RUT es requerido.';
 			hasError = true;
+		} else if ( !validateRut( rut ) ) {
+			errors.rut = 'El RUT ingresado no es válido.';
+			hasError = true;
+		}
+
+		if ( phone.trim() && !validatePhone( phone ) ) {
+			errors.phone = 'El teléfono celular debe tener exactamente 9 dígitos.';
+			hasError = true;
 		}
 
 		if ( hasError ) return;
@@ -70,12 +88,13 @@
 		onSubmit( {
 			full_name         : full_name.trim(),
 			rut               : rut.trim(),
-			phone             : phone.trim() || '',
+			phone             : phone.trim() ? formatPhone( phone ) : '',
 			organization,
 			is_representative
 		} );
 	}
 </script>
+
 
 <form onsubmit={ handleFormSubmit } class="space-y-4">
 	<div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -102,8 +121,9 @@
 		<InputText
 			label="Teléfono de contacto (Opcional)"
 			id="member-phone"
-			placeholder="Ej: +56912345678"
+			placeholder="Ej: 912345678"
 			bind:value={ phone }
+			error={ errors.phone }
 		/>
 
 		<Select
