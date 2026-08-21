@@ -5,7 +5,7 @@ export function validateRut( rut: string ): boolean {
 
 	const cleanRut = rut.replace( /[^0-9kK]/g, '' );
 
-	if ( cleanRut.length < 2 ) {
+	if ( cleanRut.length < 7 || cleanRut.length > 9 ) {
 		return false;
 	}
 
@@ -36,6 +36,30 @@ export function validateRut( rut: string ): boolean {
 	}
 
 	return dv === expectedDv;
+}
+
+
+export function formatRut( rut: string ): string {
+	if ( !rut ) {
+		return '';
+	}
+
+	const clean = rut.replace( /[^0-9kK]/g, '' );
+
+	if ( clean.length < 2 ) {
+		return rut;
+	}
+
+	const body = clean.slice( 0, -1 );
+	const dv   = clean.slice( -1 ).toUpperCase();
+
+	if ( !/^\d+$/.test( body ) ) {
+		return clean;
+	}
+
+	const formattedBody = new Intl.NumberFormat( 'es-CL' ).format( Number( body ) );
+
+	return `${ formattedBody }-${ dv }`;
 }
 
 
