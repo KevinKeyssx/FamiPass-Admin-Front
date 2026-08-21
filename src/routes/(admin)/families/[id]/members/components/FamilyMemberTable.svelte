@@ -1,10 +1,16 @@
 <script lang="ts">
 	import { Users, Crown, User as UserIcon, Edit2, Trash2 } from '@lucide/svelte';
-	import type { FamilyMember, CommunityOrganization }     from '$lib/types/index.js';
-	import { getOrgLabel }                                   from '../../../utils/constants.js';
-	import FamilyMemberRowForm                               from './FamilyMemberRowForm.svelte';
 
-	interface Props {
+    import type {
+        FamilyMember,
+        CommunityOrganization
+    }                           from '$lib/types/index.js';
+	import { getOrgLabel }      from '../../../utils/constants.js';
+	import FamilyMemberRowForm  from './FamilyMemberRowForm.svelte';
+	import { formatRut }        from '$lib/utils/validation.js';
+
+
+    interface Props {
 		members    : FamilyMember[];
 		onEdit     : ( member: FamilyMember ) => void;
 		onDelete   : ( member: FamilyMember ) => void;
@@ -19,7 +25,8 @@
 		saveError? : string | null;
 	}
 
-	let {
+
+    let {
 		members,
 		onEdit,
 		onDelete,
@@ -62,7 +69,7 @@
 						</td>
 
 						<td class="px-6 py-4 text-text-secondary font-mono">
-							{ m.rut }
+							{ formatRut( m.rut ) }
 						</td>
 
 						<td class="px-6 py-4 text-text-secondary">
