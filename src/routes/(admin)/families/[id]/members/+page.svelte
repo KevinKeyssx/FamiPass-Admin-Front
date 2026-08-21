@@ -16,6 +16,7 @@
 	import FamilyMemberForm     from '../../components/FamilyMemberForm.svelte';
 	import FamilyMemberTable    from './components/FamilyMemberTable.svelte';
 	import FamilyMemberCard     from './components/FamilyMemberCard.svelte';
+	import ButtonBack           from '$lib/components/ui/ButtonBack.svelte';
 
 
 	interface Props {
@@ -164,27 +165,23 @@
 
 <div class="space-y-6">
 	<!-- Header -->
-	<div class="flex items-center justify-between gap-4">
-		<div class="flex items-center gap-3">
-			<a
-				href="/families"
-				class="p-2 rounded-xl text-text-muted hover:text-accent hover:bg-accent-muted transition-all duration-300"
-				aria-label="Volver"
-			>
-				<ArrowLeft size={ 20 } />
-			</a>
+	<div class="header-banner group">
+		<div class="header-glow"></div>
 
-			<div>
-				<h1 class="text-3xl font-extrabold bg-linear-to-r from-text-primary to-accent bg-clip-text text-transparent tracking-tight">
+		<div class="flex items-center gap-3.5 relative z-10">
+			<ButtonBack href="/families" />
+
+			<div class="space-y-0.5">
+				<h1 class="text-2xl font-extrabold bg-linear-to-r from-text-primary via-accent to-accent bg-clip-text text-transparent tracking-tight">
 					Miembros Familiares
 				</h1>
-				<p class="text-sm text-text-secondary mt-1">
+				<p class="text-xs text-text-secondary">
 					Gestión de los miembros pertenecientes a la familia: <strong class="text-text-primary">{ data.family?.family_name }</strong>
 				</p>
 			</div>
 		</div>
 
-		<div class="flex items-center gap-3">
+		<div class="flex items-center gap-3 relative z-10 shrink-0">
 			<ViewSwitcher />
 
 			<Button variant="primary" onclick={ scrollToForm }>

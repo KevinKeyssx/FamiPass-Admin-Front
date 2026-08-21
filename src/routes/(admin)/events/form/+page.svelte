@@ -3,8 +3,13 @@
 	import { goto, invalidate } from '$app/navigation';
 	import { page }             from '$app/state';
 
-	import { ArrowLeft, CalendarDays, Bolt, Trash2 }            from '@lucide/svelte';
-	import { today, getLocalTimeZone, parseDate, CalendarDate } from '@internationalized/date';
+	import {
+        today,
+        getLocalTimeZone,
+        parseDate,
+        CalendarDate
+    }                                       from '@internationalized/date';
+	import { CalendarDays, Bolt, Trash2 }   from '@lucide/svelte';
 
 	import type { EventConfig } from '$lib/types/index.js';
 	import { isEventExpired }   from '$lib/utils/date.js';
@@ -15,6 +20,7 @@
 	import DatePicker           from '$lib/components/ui/DatePicker.svelte';
 	import Select               from '$lib/components/ui/Select.svelte';
 	import Checkbox             from '$lib/components/ui/Checkbox.svelte';
+	import ButtonBack           from '$lib/components/ui/ButtonBack.svelte';
 
 
 	interface Props {
@@ -251,22 +257,18 @@
 
 <div class="max-w-2xl mx-auto space-y-6">
 	<!-- Header -->
-	<div class="flex items-center justify-between gap-4">
-		<div class="flex items-center gap-3">
-			<a
-				href={ isEdit ? `/events/${ eventId }` : '/events' }
-				class="p-2 rounded-xl text-text-muted hover:text-accent hover:bg-accent-muted transition-all duration-300"
-				aria-label="Volver"
-			>
-				<ArrowLeft size={ 20 } />
-			</a>
+	<div class="header-banner group">
+		<div class="header-glow"></div>
 
-			<div>
-				<h1 class="text-3xl font-extrabold bg-linear-to-r from-text-primary to-accent bg-clip-text text-transparent tracking-tight">
+		<div class="flex items-center gap-3.5 relative z-10">
+			<ButtonBack href={ isEdit ? `/events/${ eventId }` : '/events' } />
+
+			<div class="space-y-0.5">
+				<h1 class="text-2xl font-extrabold bg-linear-to-r from-text-primary via-accent to-accent bg-clip-text text-transparent tracking-tight">
 					{ isEdit ? 'Editar Evento' : 'Nuevo Evento' }
 				</h1>
 
-				<p class="text-sm text-text-secondary mt-1">
+				<p class="text-xs text-text-secondary">
 					{ isEdit ? ( data.event?.event_name ?? '' ) : 'Configura los detalles del nuevo evento' }
 				</p>
 			</div>
@@ -276,7 +278,7 @@
 			<button
 				onclick={() => { deleteError = null; deleteModalOpen = true; }}
 				disabled={ isFieldDisabled( 'delete' ) }
-				class="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold
+				class="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold relative z-10
 					text-red-500 hover:bg-red-500/10 border border-transparent hover:border-red-500/20
 					transition-all duration-300 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
 			>
@@ -301,7 +303,7 @@
 
 	<form onsubmit={ handleSubmit } class="space-y-6">
 		<!-- Basic Info -->
-		<div class="p-6 space-y-6 rounded-2xl bg-zinc-100/20 dark:bg-zinc-950/20 border border-border/80 hover:border-accent/30 hover:shadow-lg transition-all duration-300">
+		<div class="form-card">
 			<div class="flex items-center gap-2.5">
 				<CalendarDays size={ 20 } class="text-accent" style="filter: drop-shadow( 0 0 8px var(--accent) );" />
 				<h2 class="font-bold text-lg text-text-primary">Información básica</h2>
@@ -372,7 +374,7 @@
 		</div>
 
 		<!-- Limits & Validation -->
-		<div class="p-6 space-y-6 rounded-2xl bg-calypso-100/20 dark:bg-zinc-950/20 border border-border/80 hover:border-accent/30 hover:shadow-lg transition-all duration-300">
+		<div class="form-card">
 			<div class="flex items-center gap-2.5">
 				<Bolt size={ 20 } class="text-accent" style="filter: drop-shadow( 0 0 8px var(--accent) );" />
 				<h2 class="font-bold text-lg text-text-primary">Límites y validación</h2>

@@ -3,13 +3,14 @@
 	import { goto, invalidate } from '$app/navigation';
 	import { page }             from '$app/state';
 
-    import { ArrowLeft, Package, Bolt, Trash2 } from '@lucide/svelte';
+    import { Package, Bolt, Trash2 } from '@lucide/svelte';
 
 	import type { Product } from '$lib/types/index.js';
 	import Button           from '$lib/components/ui/Button.svelte';
 	import Modal            from '$lib/components/ui/Modal.svelte';
 	import InputText        from '$lib/components/ui/InputText.svelte';
 	import Checkbox         from '$lib/components/ui/Checkbox.svelte';
+	import ButtonBack       from '$lib/components/ui/ButtonBack.svelte';
 
 
     interface Props {
@@ -145,43 +146,42 @@
 </svelte:head>
 
 <div class="max-w-3xl mx-auto space-y-6">
-	<!-- Top Bar -->
-	<div class="flex items-center justify-between">
-		<a
-			href="/products"
-			class="inline-flex items-center gap-2 text-sm text-(--text-secondary) hover:text-(--text-primary) transition-colors"
-		>
-			<ArrowLeft size={ 16 } />
-			Volver a Productos
-		</a>
+	<!-- Header -->
+	<div class="header-banner group">
+		<div class="header-glow"></div>
+
+		<div class="flex items-center gap-3.5 relative z-10">
+			<ButtonBack href="/products" />
+
+			<div class="space-y-0.5">
+				<h1 class="text-2xl font-extrabold bg-linear-to-r from-text-primary via-accent to-accent bg-clip-text text-transparent tracking-tight">
+					{ isEdit ? 'Editar Producto' : 'Nuevo Producto' }
+				</h1>
+
+				<p class="text-xs text-text-secondary">
+					{ isEdit ? 'Modifica los campos del producto seleccionado' : 'Ingresa la información básica del nuevo producto' }
+				</p>
+			</div>
+		</div>
 
 		{#if isEdit }
-			<Button
-				variant="danger"
-				size="sm"
-				onclick={() => { deleteModalOpen = true; }}
-				disabled={ isSaving }
-			>
-				<Trash2 size={ 16 } />
-				Eliminar Producto
-			</Button>
+			<div class="relative z-10 shrink-0">
+				<Button
+					variant="danger"
+					size="sm"
+					onclick={() => { deleteModalOpen = true; }}
+					disabled={ isSaving }
+				>
+					<Trash2 size={ 16 } />
+					Eliminar Producto
+				</Button>
+			</div>
 		{/if}
-	</div>
-
-	<!-- Title -->
-	<div>
-		<h1 class="text-2xl font-bold text-(--text-primary)">
-			{ isEdit ? 'Editar Producto' : 'Nuevo Producto' }
-		</h1>
-
-        <p class="text-(--text-secondary) mt-1 text-sm">
-			{ isEdit ? 'Modifica los campos del producto seleccionado' : 'Ingresa la información básica del nuevo producto' }
-		</p>
 	</div>
 
 	<!-- Form Layout -->
 	<form onsubmit={ handleSubmit } class="space-y-6">
-		<div class="card p-6 space-y-6 bg-linear-to-b from-(--bg-surface) to-(--bg-surface-2) border border-(--border)/60 rounded-2xl relative">
+		<div class="form-card relative">
 			<!-- Configuration Section -->
 			<div class="space-y-4">
 				<div class="flex items-center gap-2 pb-3 border-b border-(--border)/40">

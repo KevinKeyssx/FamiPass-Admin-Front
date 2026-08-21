@@ -3,14 +3,19 @@
 	import { goto, invalidate } from '$app/navigation';
 	import { page }             from '$app/state';
 
-	import { ArrowLeft, Users, Plus, Trash2, Crown, User as UserIcon } from '@lucide/svelte';
+	import { Users, Plus, Trash2, Crown, User as UserIcon } from '@lucide/svelte';
 
-	import type { Family, FamilyMember, CommunityOrganization } from '$lib/types/index.js';
-	import Button                                                from '$lib/components/ui/Button.svelte';
-	import InputText                                             from '$lib/components/ui/InputText.svelte';
-	import FamilyMemberForm                                      from '../components/FamilyMemberForm.svelte';
-	import Modal                                                 from '$lib/components/ui/Modal.svelte';
-	import { getOrgLabel }                                       from '../utils/constants.js';
+	import type {
+        Family,
+        FamilyMember,
+        CommunityOrganization
+    }                           from '$lib/types/index.js';
+	import Button               from '$lib/components/ui/Button.svelte';
+	import InputText            from '$lib/components/ui/InputText.svelte';
+	import FamilyMemberForm     from '../components/FamilyMemberForm.svelte';
+	import Modal                from '$lib/components/ui/Modal.svelte';
+	import { getOrgLabel }      from '../utils/constants.js';
+	import ButtonBack           from '$lib/components/ui/ButtonBack.svelte';
 
 
 	interface Props {
@@ -125,22 +130,18 @@
 
 <div class="max-w-2xl mx-auto space-y-6">
 	<!-- Header -->
-	<div class="flex items-center justify-between gap-4">
-		<div class="flex items-center gap-3">
-			<a
-				href="/families"
-				class="p-2 rounded-xl text-text-muted hover:text-accent hover:bg-accent-muted transition-all duration-300"
-				aria-label="Volver"
-			>
-				<ArrowLeft size={ 20 } />
-			</a>
+	<div class="header-banner group">
+		<div class="header-glow"></div>
 
-			<div>
-				<h1 class="text-3xl font-extrabold bg-linear-to-r from-text-primary to-accent bg-clip-text text-transparent tracking-tight">
+		<div class="flex items-center gap-3.5 relative z-10">
+			<ButtonBack href="/families" />
+
+			<div class="space-y-0.5">
+				<h1 class="text-2xl font-extrabold bg-linear-to-r from-text-primary via-accent to-accent bg-clip-text text-transparent tracking-tight">
 					{ isEdit ? 'Editar Familia' : 'Nueva Familia' }
 				</h1>
 
-				<p class="text-sm text-text-secondary mt-1">
+				<p class="text-xs text-text-secondary">
 					{ isEdit ? `Modificando datos de familia: ${ data.family?.family_name }` : 'Ingresa los datos de la nueva familia' }
 				</p>
 			</div>
@@ -149,7 +150,7 @@
 
 	<form onsubmit={ handleSubmit } class="space-y-6">
 		<!-- Información de la Familia -->
-		<div class="p-6 space-y-6 rounded-2xl bg-zinc-100/20 dark:bg-zinc-950/20 border border-border/80 hover:border-accent/30 hover:shadow-lg transition-all duration-300">
+		<div class="form-card">
 			<div class="flex items-center gap-2.5">
 				<Users size={ 20 } class="text-accent" style="filter: drop-shadow( 0 0 8px var(--accent) );" />
 
@@ -170,7 +171,7 @@
 
 		{#if !isEdit}
 			<!-- Integrar miembros de la familia -->
-			<div class="p-6 space-y-6 rounded-2xl bg-zinc-100/20 dark:bg-zinc-950/20 border border-border/80 hover:border-accent/30 hover:shadow-lg transition-all duration-300">
+			<div class="form-card">
 				<div class="flex items-center justify-between gap-4">
 					<div class="flex items-center gap-2.5">
 						<Users size={ 20 } class="text-accent" style="filter: drop-shadow( 0 0 8px var(--accent) );" />
