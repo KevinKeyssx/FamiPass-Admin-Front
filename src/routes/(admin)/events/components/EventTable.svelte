@@ -3,6 +3,7 @@
 
 	import Actions              from '$lib/components/shared/Actions.svelte';
 	import type { EventConfig } from '$lib/types/index.js';
+	import { isEventExpired }   from '$lib/utils/date.js';
 	import Preview              from '$lib/components/shared/Preview.svelte';
 	import Status               from './Status.svelte';
 
@@ -42,6 +43,7 @@
 						<th class="text-left px-4 py-3 font-semibold text-(--text-secondary)">Nombre</th>
 						<th class="text-left px-4 py-3 font-semibold text-(--text-secondary) hidden sm:table-cell">Fecha</th>
 						<th class="text-left px-4 py-3 font-semibold text-(--text-secondary) hidden md:table-cell">Deadline</th>
+						<th class="text-left px-4 py-3 font-semibold text-(--text-secondary) hidden md:table-cell">Límite Canje</th>
 						<th class="text-left px-4 py-3 font-semibold text-(--text-secondary) hidden lg:table-cell">Lím. Miembros</th>
 						<th class="text-left px-4 py-3 font-semibold text-(--text-secondary) hidden lg:table-cell">Lím. Invitados</th>
 						<th class="text-left px-4 py-3 font-semibold text-(--text-secondary) hidden xl:table-cell">Verif. Requerida</th>
@@ -53,7 +55,14 @@
 					{#each events as event}
 						<tr class="hover:bg-(--bg-surface-2) transition-colors">
 							<td class="px-4 py-3">
-								<p class="font-medium text-(--text-primary) truncate max-w-45">{ event.event_name }</p>
+								<div class="flex items-center gap-2">
+									<p class="font-medium text-(--text-primary) truncate max-w-45">{ event.event_name }</p>
+									{#if event.expires_at && isEventExpired( event.expires_at )}
+										<span class="px-1.5 py-0.5 rounded-md text-[9px] font-bold bg-red-500/10 text-red-500 border border-red-500/20">
+											EXPIRADO
+										</span>
+									{/if}
+								</div>
 
 								{#if event.detect_by_minors }
 									<span class="text-xs text-(--text-muted)">Detecta menores</span>
@@ -67,6 +76,17 @@
 							<td class="px-4 py-3 text-(--text-secondary) hidden md:table-cell whitespace-nowrap">
 								{ formatDate( event.registration_deadline ) }
 							</td>
+
+							<td class="px-4 py-3 text-(--text-secondary) hidden md:table-cell whitespace-nowrap">
+								{#if event.expires_at}
+									<span class={ isEventExpired( event.expires_at ) ? 'text-red-500 font-semibold' : '' }>
+										{ formatDate( event.expires_at ) }
+									</span>
+								{:else}
+									<span class="text-(--text-muted)">—</span>
+								{/if}
+							</td>
+
 
 							<td class="px-4 py-3 text-(--text-secondary) hidden lg:table-cell text-center">
 								{ event.max_family_members ?? '—' }
