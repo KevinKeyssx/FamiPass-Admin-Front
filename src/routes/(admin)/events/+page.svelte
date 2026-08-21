@@ -3,17 +3,15 @@
 	import { page }             from '$app/state';
 	import { goto, invalidate } from '$app/navigation';
 
-    import { CalendarPlus, Search } from '@lucide/svelte';
+    import { Plus } from '@lucide/svelte';
 
 	import type { EventConfig } from '$lib/types/index.js';
 	import ViewSwitcher         from '$lib/components/shared/ViewSwitcher.svelte';
 	import Pagination           from '$lib/components/shared/Pagination.svelte';
 	import EventTable           from './components/EventTable.svelte';
 	import EventCard            from './components/EventCard.svelte';
-	import Button               from '$lib/components/ui/Button.svelte';
+	import EventFilters         from './components/EventFilters.svelte';
 	import Modal                from '$lib/components/ui/Modal.svelte';
-	import DatePicker           from '$lib/components/ui/DatePicker.svelte';
-	import Select               from '$lib/components/ui/Select.svelte';
 
 
     interface Props {
@@ -48,27 +46,7 @@
     const currentView = $derived( page.url.searchParams.get( 'view' ) || 'card' );
 
 
-    const statusOptions = [
-		{ value: 'ALL',         label: 'Todos los estados' },
-		{ value: 'DRAFT',       label: 'Borrador' },
-		{ value: 'IN_PROGRESS', label: 'En Curso' },
-		{ value: 'FINISHED',    label: 'Finalizado' },
-		{ value: 'CANCELLED',   label: 'Cancelado' }
-	];
 
-
-    const verificationOptions = [
-		{ value: 'ALL',   label: 'Todos' },
-		{ value: 'TRUE',  label: 'Requerida' },
-		{ value: 'FALSE', label: 'No Requerida' }
-	];
-
-
-    const minorsOptions = [
-		{ value: 'ALL',   label: 'Todos' },
-		{ value: 'TRUE',  label: 'Sí' },
-		{ value: 'FALSE', label: 'No' }
-	];
 
 
     $effect( () => {
@@ -130,9 +108,7 @@
 	}
 
 
-    function clearDateFilter(): void {
-		searchDate = '';
-	}
+
 
 
     function clearAllFilters(): void {
@@ -213,112 +189,41 @@
 
 <div class="space-y-6">
 	<!-- Header -->
-	<div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-		<div>
-			<h1 class="text-2xl font-bold text-(--text-primary)">Eventos</h1>
-			<p class="text-(--text-secondary) mt-1 text-sm">Gestión completa de eventos de FamiPass</p>
+	<div class="header-banner group">
+		<div class="header-glow"></div>
+
+		<div class="space-y-1 relative z-10">
+			<h1 class="text-2xl font-extrabold bg-linear-to-r from-text-primary via-accent to-accent bg-clip-text text-transparent tracking-tight">
+				Eventos
+			</h1>
+			<p class="text-xs text-(--text-secondary) mt-0.5">
+				Gestión completa de eventos de FamiPass
+			</p>
 		</div>
 
-		<div class="flex items-center gap-3 self-end sm:self-auto">
+		<div class="flex items-center gap-3 relative z-10 shrink-0">
 			<ViewSwitcher />
-			<a href="/events/form">
-				<Button variant="primary">
-					<CalendarPlus size={ 16 } />
-					Nuevo Evento
-				</Button>
+
+			<a
+				href="/events/form"
+				class="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold bg-accent text-accent-text hover:opacity-90 hover:shadow-lg hover:shadow-accent/20 hover:-translate-y-0.5 transition-all duration-300"
+			>
+				<Plus size={ 16 } />
+				Crear Evento
 			</a>
 		</div>
 	</div>
 
 	<!-- Controls / Filters & Search Grid -->
-	<div class="card p-5 space-y-4 bg-linear-to-b from-(--bg-surface) to-(--bg-surface-2) border border-(--border)/60 rounded-2xl relative">
-		<!-- First Row: Search Text & Date Picker -->
-		<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-			<!-- Name Search -->
-			<div class="relative">
-				<Search size={ 16 } class="absolute left-3.5 top-1/2 -translate-y-1/2 text-(--text-muted) pointer-events-none" />
-				<input
-					type="text"
-					bind:value={ searchQuery }
-					placeholder="Buscar eventos por nombre..."
-					onkeydown={ ( e ) => e.key === 'Enter' && handleFilterChange() }
-					class="w-full pl-10 pr-24 py-2.5 rounded-xl border border-(--border)/60 transition-all duration-300
-						bg-(--bg-surface-2) text-(--text-primary) placeholder:text-(--text-muted) text-sm
-						focus:outline-none focus:border-(--accent) focus:ring-4 focus:ring-(--accent)/10"
-				/>
-				<button
-					onclick={ handleFilterChange }
-					class="absolute right-1.5 top-1/2 -translate-y-1/2 px-3 py-1.5 rounded-lg text-xs font-semibold
-						bg-(--accent) text-(--accent-text) hover:bg-(--accent-hover) transition-colors cursor-pointer"
-				>
-					Buscar
-				</button>
-			</div>
-
-			<!-- Date Search -->
-			<div class="flex items-center gap-2">
-				<span class="text-xs text-(--text-secondary) font-medium whitespace-nowrap">Fecha:</span>
-				<div class="flex-1">
-					<DatePicker
-						bind:value={ searchDate }
-					/>
-				</div>
-				{#if searchDate }
-					<button
-						onclick={ clearDateFilter }
-						class="text-xs text-red-500 hover:underline font-semibold cursor-pointer shrink-0"
-					>
-						Limpiar
-					</button>
-				{/if}
-			</div>
-		</div>
-
-		<!-- Second Row: Advanced Select Filters -->
-		<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 items-end">
-			<!-- Status Selector -->
-			<div class="flex flex-col gap-1.5 w-full">
-				<span class="text-xs text-(--text-secondary) font-semibold uppercase tracking-wider">Estado del Evento</span>
-				<Select
-					bind:value={ selectedStatus }
-					options={ statusOptions }
-					placeholder="Todos los estados"
-				/>
-			</div>
-
-			<!-- Verification Required Selector -->
-			<div class="flex flex-col gap-1.5 w-full">
-				<span class="text-xs text-(--text-secondary) font-semibold uppercase tracking-wider">Verificación Req.</span>
-				<Select
-					bind:value={ selectedVerification }
-					options={ verificationOptions }
-					placeholder="Todos"
-				/>
-			</div>
-
-			<!-- Detect By Minors Selector -->
-			<div class="flex flex-col gap-1.5 w-full">
-				<span class="text-xs text-(--text-secondary) font-semibold uppercase tracking-wider">Detecta Menores</span>
-				<Select
-					bind:value={ selectedMinors }
-					options={ minorsOptions }
-					placeholder="Todos"
-				/>
-			</div>
-
-			<!-- Action Buttons -->
-			<div class="flex justify-end gap-2.5">
-				<Button
-					variant="secondary"
-					size="sm"
-					class="w-full"
-					onclick={ clearAllFilters }
-				>
-					Limpiar Filtros
-				</Button>
-			</div>
-		</div>
-	</div>
+	<EventFilters
+		bind:searchQuery={ searchQuery }
+		bind:searchDate={ searchDate }
+		bind:selectedStatus={ selectedStatus }
+		bind:selectedVerification={ selectedVerification }
+		bind:selectedMinors={ selectedMinors }
+		onSearch={ handleFilterChange }
+		onClearAll={ clearAllFilters }
+	/>
 
 	<!-- Event List View (Table or Card) -->
 	<div class="flex flex-col">
