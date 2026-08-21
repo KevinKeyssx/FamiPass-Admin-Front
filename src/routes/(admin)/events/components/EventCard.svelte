@@ -2,6 +2,7 @@
 	import { CalendarDays, Clock, Users, UserPlus } from '@lucide/svelte';
 
 	import type { EventConfig } from '$lib/types/index.js';
+	import { isEventExpired }   from '$lib/utils/date.js';
 	import Preview              from '$lib/components/shared/Preview.svelte';
 	import Status               from './Status.svelte';
 	import Actions              from '$lib/components/shared/Actions.svelte';
@@ -52,6 +53,12 @@
 
 					<!-- Badges -->
 					<div class="flex flex-wrap gap-2 mt-1">
+						{#if event.expires_at && isEventExpired( event.expires_at )}
+							<span class="px-2.5 py-0.5 rounded-full text-[10px] font-semibold bg-red-500/10 text-red-500 border border-red-500/20 tracking-wide">
+								Expirado
+							</span>
+						{/if}
+
 						{#if event.detect_by_minors }
 							<span class="px-2.5 py-0.5 rounded-full text-[10px] font-semibold bg-blue-500/10 text-blue-500 border border-blue-500/20 tracking-wide">
 								Detecta Menores
@@ -118,7 +125,22 @@
 							<p class="font-semibold text-(--text-primary) mt-1 leading-none">{ event.max_guests_per_family ?? '—' }</p>
 						</div>
 					</div>
+
+					{#if event.expires_at}
+						<div class="col-span-2 bg-(--bg-base)/40 dark:bg-black/10 border border-(--border)/30 p-2.5 rounded-xl flex items-center gap-3 transition-all duration-200 hover:bg-(--bg-base)/60 dark:hover:bg-black/20 group/item">
+							<div class="p-2 rounded-lg bg-red-500/10 text-red-500 shrink-0 transition-transform group-hover/item:scale-110">
+								<Clock size={ 14 } />
+							</div>
+
+							<div class="truncate">
+								<p class="text-[9px] text-(--text-secondary) font-bold uppercase tracking-wider leading-none">Fin Canje (Expiración)</p>
+
+								<p class="font-semibold text-(--text-primary) mt-1 leading-none">{ formatDate( event.expires_at ) }</p>
+							</div>
+						</div>
+					{/if}
 				</div>
+
 
 				<!-- Actions -->
 				<div class="flex items-center justify-between border-t border-(--border)/40 pt-3 mt-0 relative z-10">
