@@ -197,15 +197,28 @@ body {
    Utilidades globales
 ───────────────────────────────────────────────────────────────────────── */
 .card {
-    background   : var( --bg-surface );
-    border       : 1px solid var( --border );
     border-radius: 12px;
-    box-shadow   : var( --shadow-sm );
     transition   : box-shadow 0.2s ease, transform 0.2s ease;
 }
 
-.card:hover {
-    box-shadow: var( --shadow-md );
+html.light .card {
+    background   : var( --bg-surface );
+    border       : 1px solid rgba( 203, 213, 225, 0.85 ); /* slate-300 */
+    box-shadow   : var( --shadow-md );
+}
+
+html.light .card:hover {
+    box-shadow   : var( --shadow-lg );
+}
+
+html.dark .card {
+    background   : linear-gradient( to bottom, var( --bg-surface ), var( --bg-surface-2 ) );
+    border       : 1px solid var( --border );
+    box-shadow   : var( --shadow-sm );
+}
+
+html.dark .card:hover {
+    box-shadow   : var( --shadow-glow );
 }
 
 .glass {
@@ -274,4 +287,28 @@ html.dark .status-completed   { --status-bg: rgba( 52, 211, 153, 0.15 );  --stat
 	font-weight     : 500;
 	font-size       : 0.875rem;
 	transition      : all 0.2s ease;
+}
+
+
+/* ─────────────────────────────────────────────────────────────────────────
+   Form Cards & Page Header Banners (Glowing Styles)
+   ───────────────────────────────────────────────────────────────────────── */
+.form-card {
+	@apply rounded-2xl p-6 space-y-6 transition-all duration-300;
+}
+
+html.light .form-card {
+	@apply bg-(--bg-surface) border border-slate-300/85 shadow-md hover:border-accent/30 hover:shadow-lg;
+}
+
+html.dark .form-card {
+	@apply bg-linear-to-b from-(--bg-surface) to-(--bg-surface-2) border border-(--border)/60 shadow-sm hover:border-accent/30 hover:shadow-(--shadow-glow);
+}
+
+.header-banner {
+	@apply p-5 rounded-2xl bg-linear-to-r from-accent/10 via-accent/5 to-transparent border border-accent/15 flex flex-col sm:flex-row sm:items-center justify-between gap-4 relative overflow-hidden select-none;
+}
+
+.header-glow {
+	@apply absolute inset-0 bg-radial from-accent/5 via-transparent to-transparent opacity-50 group-hover:opacity-80 transition-opacity duration-500 pointer-events-none;
 }
