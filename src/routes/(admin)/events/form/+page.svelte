@@ -3,10 +3,11 @@
 	import { goto, invalidate } from '$app/navigation';
 	import { page }             from '$app/state';
 
-    import { ArrowLeft, CalendarDays, Bolt, Trash2 }            from '@lucide/svelte';
+	import { ArrowLeft, CalendarDays, Bolt, Trash2 }            from '@lucide/svelte';
 	import { today, getLocalTimeZone, parseDate, CalendarDate } from '@internationalized/date';
 
 	import type { EventConfig } from '$lib/types/index.js';
+	import { isEventExpired }   from '$lib/utils/date.js';
 	import Button               from '$lib/components/ui/Button.svelte';
 	import Modal                from '$lib/components/ui/Modal.svelte';
 	import InputText            from '$lib/components/ui/InputText.svelte';
@@ -18,7 +19,8 @@
 
 	interface Props {
 		data: {
-			event : EventConfig | null;
+			event        : EventConfig | null;
+			isSuperAdmin : boolean;
 		};
 	}
 
@@ -30,13 +32,16 @@
 	const isEdit  = $derived( !!eventId );
 
 
-	type FormData = Omit<EventConfig, 'id' | 'created_at' | 'updated_at'>;
+	interface LocalFormData extends Omit<EventConfig, 'id' | 'created_at' | 'updated_at' | 'expires_at'> {
+		expires_at: string;
+	}
 
 	// svelte-ignore state_referenced_locally
-	let form = $state<FormData>({
+	let form = $state<LocalFormData>({
 		event_name                 : data.event?.event_name                 ?? '',
 		event_date                 : data.event?.event_date                 ?? '',
 		registration_deadline      : data.event?.registration_deadline      ?? '',
+		expires_at                 : data.event?.expires_at                 ?? '',
 		detect_by_minors           : data.event?.detect_by_minors           ?? false,
 		status                     : data.event?.status                     ?? 'DRAFT',
 		max_family_members         : data.event?.max_family_members         ?? null,
@@ -55,6 +60,21 @@
 		event_date            : null,
 		registration_deadline : null
 	});
+
+
+	const isExpired = $derived( data.event?.expires_at ? isEventExpired( data.event.expires_at ) : false );
+
+
+	function isFieldDisabled( fieldName: string ): boolean {
+		if ( isSaving ) return true;
+		if ( isExpired ) {
+			if ( fieldName === 'expires_at' && data.isSuperAdmin ) {
+				return false;
+			}
+			return true;
+		}
+		return false;
+	}
 
 
 	const statusOptionsEdit = $derived(
@@ -90,14 +110,24 @@
 	function disableRegDeadline( date: CalendarDate ): boolean {
 		if ( !form.event_date ) return true;
 
-		const eventDateVal = parseDate( form.event_date );
+		const eventDateVal = parseDate( form.event_date.slice( 0, 10 ) );
 		const todayVal     = today( getLocalTimeZone() );
 
 		return date.compare( todayVal ) < 0 || date.compare( eventDateVal ) > 0;
 	}
 
 
-	const isRegDeadlineDisabled = $derived( !form.event_date );
+	function disableExpiresAt( date: CalendarDate ): boolean {
+		if ( !form.registration_deadline ) return true;
+
+		const regDeadlineVal = parseDate( form.registration_deadline.slice( 0, 10 ) );
+
+		return date.compare( regDeadlineVal ) < 0;
+	}
+
+
+
+	const isRegDeadlineDisabled = $derived( !form.event_date || isFieldDisabled( 'registration_deadline' ) );
 
 
 	async function handleSubmit( e: SubmitEvent ): Promise<void> {
@@ -136,6 +166,7 @@
 		formData.append( 'event_name', form.event_name.trim() );
 		formData.append( 'event_date', form.event_date );
 		formData.append( 'registration_deadline', form.registration_deadline );
+		formData.append( 'expires_at', form.expires_at || '' );
 		formData.append( 'status', form.status );
 		formData.append( 'detect_by_minors', String( form.detect_by_minors ) );
 		formData.append( 'require_guest_verification', String( form.require_guest_verification ) );
@@ -213,6 +244,7 @@
 	}
 </script>
 
+
 <svelte:head>
 	<title>{ isEdit ? 'Editar Evento' : 'Nuevo Evento' } — FamiPass Admin</title>
 </svelte:head>
@@ -243,15 +275,29 @@
 		{#if isEdit && data.event?.status === 'DRAFT'}
 			<button
 				onclick={() => { deleteError = null; deleteModalOpen = true; }}
+				disabled={ isFieldDisabled( 'delete' ) }
 				class="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold
 					text-red-500 hover:bg-red-500/10 border border-transparent hover:border-red-500/20
-					transition-all duration-300 cursor-pointer"
+					transition-all duration-300 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
 			>
 				<Trash2 size={ 16 } />
 				Eliminar Borrador
 			</button>
 		{/if}
 	</div>
+
+	{#if isExpired}
+		<div class="p-4 rounded-2xl bg-red-500/10 border border-red-500/30 text-red-500 text-sm flex flex-col gap-1.5">
+			<p class="font-bold flex items-center gap-2">
+				<span>⚠️</span> Este evento ha expirado (Fin Canje: { data.event?.expires_at })
+			</p>
+			{#if data.isSuperAdmin}
+				<p>Como Super Administrador, solo puedes modificar la fecha límite de canje (Expiración). Todos los demás campos están bloqueados.</p>
+			{:else}
+				<p>El evento está bloqueado. Solo un Super Administrador puede modificar la fecha límite de canje.</p>
+			{/if}
+		</div>
+	{/if}
 
 	<form onsubmit={ handleSubmit } class="space-y-6">
 		<!-- Basic Info -->
@@ -267,6 +313,7 @@
 				placeholder="Ej: Retiro Familiar 2026"
 				bind:value={ form.event_name }
 				error={ errors.event_name }
+				disabled={ isFieldDisabled( 'event_name' ) }
 			/>
 
 			<div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -277,6 +324,7 @@
 					bind:value={ form.event_date }
 					error={ errors.event_date }
 					isDateDisabled={ disableEventDate }
+					disabled={ isFieldDisabled( 'event_date' ) }
 				/>
 
 				<DatePicker
@@ -290,6 +338,27 @@
 				/>
 			</div>
 
+			<div class="flex items-end gap-2">
+				<div class="flex-1">
+					<DatePicker
+						label="Fecha límite de canje (Expiración)"
+						id="expires-at"
+						bind:value={ form.expires_at }
+						disabled={ isFieldDisabled( 'expires_at' ) }
+						isDateDisabled={ disableExpiresAt }
+					/>
+				</div>
+				{#if form.expires_at && !isFieldDisabled( 'expires_at' )}
+					<button
+						type="button"
+						onclick={() => form.expires_at = ''}
+						class="px-3 py-2 text-xs text-red-500 hover:underline font-semibold cursor-pointer shrink-0 border border-red-500/20 hover:bg-red-500/5 rounded-xl h-10.5 flex items-center justify-center transition-all duration-300"
+					>
+						Limpiar
+					</button>
+				{/if}
+			</div>
+
 			{#if isEdit}
 				<Select
 					label="Estado"
@@ -297,6 +366,7 @@
 					required={ true }
 					options={ statusOptionsEdit }
 					bind:value={ form.status }
+					disabled={ isFieldDisabled( 'status' ) }
 				/>
 			{/if}
 		</div>
@@ -315,6 +385,7 @@
 					min={ 1 }
 					placeholder="Sin límite"
 					bind:value={ form.max_family_members }
+					disabled={ isFieldDisabled( 'max_family_members' ) }
 				/>
 
 				<InputNumber
@@ -323,6 +394,7 @@
 					min={ 0 }
 					placeholder="Sin límite"
 					bind:value={ form.max_guests_per_family }
+					disabled={ isFieldDisabled( 'max_guests_per_family' ) }
 				/>
 			</div>
 
@@ -332,6 +404,7 @@
 					description="Aplica porciones especiales para menores en las órdenes"
 					id="detect-minors"
 					bind:checked={ form.detect_by_minors }
+					disabled={ isFieldDisabled( 'detect_by_minors' ) }
 				/>
 
 				<Checkbox
@@ -339,6 +412,7 @@
 					description="Los invitados deben ser verificados antes del evento"
 					id="require-verification"
 					bind:checked={ form.require_guest_verification }
+					disabled={ isFieldDisabled( 'require_guest_verification' ) }
 				/>
 			</div>
 		</div>
@@ -360,6 +434,7 @@
 				type="submit"
 				variant="primary"
 				loading={ isSaving }
+				disabled={ isExpired && !data.isSuperAdmin }
 			>
 				{ isEdit ? 'Guardar Cambios' : 'Crear Evento' }
 			</Button>
@@ -383,3 +458,4 @@
 		<p class="mt-3 text-red-500 text-sm">{ deleteError }</p>
 	{/if}
 </Modal>
+
