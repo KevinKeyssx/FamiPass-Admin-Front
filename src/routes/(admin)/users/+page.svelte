@@ -2,7 +2,8 @@
 	import { deserialize }      from '$app/forms';
 	import { page }             from '$app/state';
 	import { goto, invalidate } from '$app/navigation';
-	import { UserPlus, Search } from '@lucide/svelte';
+
+    import { UserPlus, Search } from '@lucide/svelte';
 
 	import type { User as UserType }    from '$lib/types/index.js';
 	import ViewSwitcher                 from '$lib/components/shared/ViewSwitcher.svelte';
