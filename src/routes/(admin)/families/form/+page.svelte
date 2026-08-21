@@ -270,6 +270,7 @@
 	open={ showMemberModal }
 	onClose={ () => showMemberModal = false }
 	title="Agregar Miembro"
+	size="lg"
 >
 	<FamilyMemberForm
 		onSubmit={ handleAddMember }
