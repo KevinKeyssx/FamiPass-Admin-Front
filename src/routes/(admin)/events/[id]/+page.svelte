@@ -3,8 +3,9 @@
 	import { goto, invalidate } from '$app/navigation';
 	import { deserialize }      from '$app/forms';
 
-	import { ArrowLeft, Pencil, CalendarDays, Users, Search, Plus } from '@lucide/svelte';
-	import { isEventExpired }   from '$lib/utils/date.js';
+    import { ArrowLeft, Pencil, CalendarDays, Users, Search, Plus } from '@lucide/svelte';
+
+    import { isEventExpired }   from '$lib/utils/date.js';
 
 
     import type {
