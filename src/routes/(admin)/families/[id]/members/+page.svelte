@@ -221,6 +221,7 @@
 	open={ showFormModal }
 	onClose={ () => { showFormModal = false; } }
 	title="Editar Miembro"
+	size="lg"
 >
 	<FamilyMemberForm
 		member={ selectedMember }
