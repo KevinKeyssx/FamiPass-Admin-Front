@@ -1,4 +1,4 @@
-﻿<script lang="ts">
+<script lang="ts">
 	import Button from './Button.svelte';
 
 	interface Props {
@@ -9,6 +9,7 @@
 		confirmLabel?  : string;
 		confirmVariant?: 'primary' | 'secondary' | 'ghost' | 'danger';
 		loading?       : boolean;
+		size?          : 'md' | 'lg' | 'xl';
 		children       : import( 'svelte' ).Snippet;
 	}
 
@@ -20,6 +21,7 @@
 		confirmLabel   = 'Confirmar',
 		confirmVariant = 'primary',
 		loading        = false,
+		size           = 'md',
 		children,
 	}: Props = $props();
 
@@ -50,7 +52,7 @@
 
 		<!-- Panel -->
 		<div
-			class="relative z-10 w-full max-w-md rounded-2xl border border-(--border) bg-(--bg-surface) shadow-(--shadow-lg) p-6 animate-in"
+			class="relative z-10 w-full { size === 'lg' ? 'max-w-lg' : size === 'xl' ? 'max-w-xl' : 'max-w-md' } rounded-2xl border border-(--border) bg-(--bg-surface) shadow-(--shadow-lg) p-6 animate-in"
 		>
 			<!-- Header -->
 			<div class="flex items-center justify-between mb-4">
