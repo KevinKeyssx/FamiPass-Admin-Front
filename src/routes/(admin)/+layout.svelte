@@ -2,34 +2,32 @@
 	import { page } from '$app/state';
 	import { goto } from '$app/navigation';
 
-	import { Menu as MenuIcon, X } from '@lucide/svelte';
-
 	import { authClient }   from '$lib/auth/auth-client.js';
 	import Menu             from '$lib/components/shared/Menu.svelte';
-    import ToggleTheme      from '$lib/components/shared/ToggleTheme.svelte';
+	import Header           from '$lib/components/shared/home/Header.svelte';
 
 
-    let { children, data } = $props();
+	let { children, data } = $props();
 
 
-    let sidebarOpen = $state( false );
+	let sidebarOpen = $state( false );
 
 
-    function toggleSidebar(): void {
+	function toggleSidebar(): void {
 		sidebarOpen = !sidebarOpen;
 	}
 
 
-    async function handleLogout(): Promise<void> {
+	async function handleLogout(): Promise<void> {
 		await authClient.signOut();
 		goto( '/login' );
 	}
 
 
-    const currentPath = $derived( page.url.pathname );
+	const currentPath = $derived( page.url.pathname );
 
 
-    const navItems = [
+	const navItems = [
 		{ href: '/dashboard', label: 'Dashboard' },
 		{ href: '/events',    label: 'Eventos' }
 	];
@@ -62,29 +60,7 @@
 
 	<!-- ── Main Content ── -->
 	<div class="flex-1 flex flex-col min-w-0 overflow-hidden relative z-10">
-		<!-- Topbar -->
-		<header class="glass sticky top-0 z-10 flex items-center justify-between px-4 sm:px-6 py-3">
-			<button
-				onclick={toggleSidebar}
-				class="lg:hidden p-2 rounded-lg text-(--text-secondary) hover:bg-(--bg-surface-2) transition-colors"
-				aria-label="Abrir menú"
-			>
-				{#if sidebarOpen}
-					<X size={20} />
-				{:else}
-					<MenuIcon size={20} />
-				{/if}
-			</button>
-
-			<div class="hidden lg:block">
-				<h1 class="text-sm font-medium text-(--text-muted)">
-					{navItems.find( ( n ) => currentPath.startsWith( n.href ) )?.label ?? 'FamiPass Admin'}
-				</h1>
-			</div>
-
-			<!-- Theme toggle -->
-			<ToggleTheme />
-		</header>
+		<Header {sidebarOpen} {toggleSidebar} />
 
 		<!-- Page content -->
 		<main class="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8">
