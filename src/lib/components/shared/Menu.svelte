@@ -65,6 +65,7 @@
 		{#each navItems as { href, label, Icon }}
 			{@const isActive = currentPath.startsWith( href )}
 			<a
+                data-sveltekit-preload-data="hover"
 				{href}
 				class="flex items-center gap-3 px-3 py-2.5 rounded-xl font-medium text-sm
                     transition-all duration-300 group border-l-2 border-transparent
