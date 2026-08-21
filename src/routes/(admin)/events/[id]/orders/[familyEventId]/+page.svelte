@@ -1,12 +1,13 @@
 <script lang="ts">
-	import { ArrowLeft, Trash2, Users, ShoppingBasket, Plus, Check, X, Clock, Edit2 } from '@lucide/svelte';
 	import { deserialize }        from '$app/forms';
 	import { invalidateAll }      from '$app/navigation';
-	import { page }               from '$app/state';
 
-	import Button      from '$lib/components/ui/Button.svelte';
-	import Modal       from '$lib/components/ui/Modal.svelte';
-	import InputNumber from '$lib/components/ui/InputNumber.svelte';
+    import { ArrowLeft, Trash2, Users, ShoppingBasket, Plus, Check, X, Clock } from '@lucide/svelte';
+
+    import { isEventExpired }   from '$lib/utils/date.js';
+	import Button               from '$lib/components/ui/Button.svelte';
+	import Modal                from '$lib/components/ui/Modal.svelte';
+	import InputNumber          from '$lib/components/ui/InputNumber.svelte';
 
 
 	interface Props {
@@ -22,15 +23,18 @@
 
 	let { data }: Props = $props();
 
-	let isSubmitting = $state( false );
-	let submitError  = $state<string | null>( null );
-
+	let isSubmitting    = $state( false );
+	let submitError     = $state<string | null>( null );
 	let deleteModalOpen = $state( false );
 	let orderToDelete   = $state<string | null>( null );
 	let isDeleting      = $state( false );
 	let deleteError     = $state<string | null>( null );
+    let formValues      = $state<Record<string, number>>( {} );
 
-	let formValues = $state<Record<string, number>>( {} );
+
+	const isExpired = $derived( data.event.expires_at ? isEventExpired( data.event.expires_at ) : false );
+
+
 
 	$effect( () => {
 		for ( const ep of data.eventProducts ) {
@@ -224,7 +228,18 @@
 		</div>
 	</div>
 
+	{#if isExpired}
+		<div class="p-4 rounded-2xl bg-red-500/10 border border-red-500/30 text-red-500 text-sm flex items-center gap-2">
+			<span>⚠️</span>
+			<div>
+				<p class="font-bold">Este evento ha expirado (Fin Canje: { data.event.expires_at }).</p>
+				<p class="text-xs">No se pueden crear, cambiar de estado ni eliminar órdenes para este evento.</p>
+			</div>
+		</div>
+	{/if}
+
 	<!-- Info Grid -->
+
 	<div class="grid grid-cols-1 md:grid-cols-3 gap-6">
 		<div class="card p-6 space-y-4">
 			<h2 class="text-xs font-bold uppercase tracking-wider text-(--text-muted) flex items-center gap-2">
@@ -329,9 +344,10 @@
 										name="qty_adult_{ ep.product_id }"
 										min={ 0 }
 										max={ remAdult }
-										disabled={ !isAvailable || remAdult <= 0 }
+										disabled={ !isAvailable || remAdult <= 0 || isExpired }
 										bind:value={ formValues[ `qty_adult_${ ep.product_id }` ] }
 									/>
+
 									<span class="text-[10px] text-(--text-muted) block mt-1">
 										Reclamados: { curClaimedAdult } de { maxAdultQuota }
 									</span>
@@ -348,9 +364,10 @@
 											name="qty_child_{ ep.product_id }"
 											min={ 0 }
 											max={ remChild }
-											disabled={ !isAvailable || remChild <= 0 }
+											disabled={ !isAvailable || remChild <= 0 || isExpired }
 											bind:value={ formValues[ `qty_child_${ ep.product_id }` ] }
 										/>
+
 										<span class="text-[10px] text-(--text-muted) block mt-1">
 											Reclamados: { curClaimedChild } de { maxChildQuota }
 										</span>
@@ -365,10 +382,17 @@
 					<p class="text-sm text-red-500 font-medium">{ submitError }</p>
 				{/if}
 
-				<Button type="submit" variant="primary" class="w-full" loading={ isSubmitting }>
+				{#if isExpired}
+					<div class="p-3 bg-red-500/5 border border-red-500/20 text-red-500 rounded-xl text-xs text-center font-medium">
+						Las órdenes están bloqueadas porque el evento ha expirado.
+					</div>
+				{/if}
+
+				<Button type="submit" variant="primary" class="w-full" loading={ isSubmitting } disabled={ isExpired }>
 					<Plus size={ 16 } />
 					Registrar Orden
 				</Button>
+
 			</form>
 		</div>
 
@@ -393,7 +417,7 @@
 
 						<div class="flex items-center gap-2">
 							<!-- Quick action status -->
-							{#if o.status !== 'COMPLETED'}
+							{#if o.status !== 'COMPLETED' && !isExpired}
 								<button
 									onclick={ () => changeStatus( o.id, 'COMPLETED' ) }
 									class="p-1 rounded-lg text-green-400 hover:bg-green-400/10 transition-colors"
@@ -403,7 +427,7 @@
 								</button>
 							{/if}
 
-							{#if o.status !== 'PENDING'}
+							{#if o.status !== 'PENDING' && !isExpired}
 								<button
 									onclick={ () => changeStatus( o.id, 'PENDING' ) }
 									class="p-1 rounded-lg text-yellow-400 hover:bg-yellow-400/10 transition-colors"
@@ -413,7 +437,7 @@
 								</button>
 							{/if}
 
-							{#if o.status !== 'CANCELLED'}
+							{#if o.status !== 'CANCELLED' && !isExpired}
 								<button
 									onclick={ () => changeStatus( o.id, 'CANCELLED' ) }
 									class="p-1 rounded-lg text-red-400 hover:bg-red-400/10 transition-colors"
@@ -423,7 +447,7 @@
 								</button>
 							{/if}
 
-							{#if data.isSuperAdmin}
+							{#if data.isSuperAdmin && !isExpired}
 								<button
 									onclick={ () => openDeleteModal( o.id ) }
 									class="p-1 rounded-lg text-red-500 hover:bg-red-500/10 transition-colors ml-1"
@@ -433,6 +457,7 @@
 								</button>
 							{/if}
 						</div>
+
 					</div>
 
 					<!-- Items list -->
