@@ -1,6 +1,10 @@
 import { supabaseServer } from '../supabase.js';
 
-import type { EventConfig, EventStatus } from '$lib/types/index.js';
+import type {
+    EventConfig,
+    EventStatus
+}                           from '$lib/types/index.js';
+import { isEventExpired }   from '$lib/utils/date.js';
 
 
 export async function getEvents( params?: {
@@ -99,6 +103,7 @@ export async function createEvent(
 			event_name                 : body.event_name,
 			event_date                 : body.event_date,
 			registration_deadline      : body.registration_deadline,
+			expires_at                 : body.expires_at ?? null,
 			detect_by_minors           : body.detect_by_minors ?? false,
 			status                     : body.status ?? 'DRAFT',
 			max_family_members         : body.max_family_members ?? null,
@@ -162,6 +167,16 @@ export async function deleteEvent( id: string ): Promise<void> {
 
 
 export async function addFamilyToEvent( eventId: string, familyId: string ): Promise<void> {
+	const event = await getEventById( eventId );
+
+	if ( !event ) {
+		throw new Error( 'Evento no encontrado' );
+	}
+
+	if ( event.expires_at && isEventExpired( event.expires_at ) ) {
+		throw new Error( 'El evento ha expirado y no se pueden asociar familias.' );
+	}
+
 	const { error } = await supabaseServer
 		.from( 'family_events' )
 		.insert({
@@ -176,6 +191,26 @@ export async function addFamilyToEvent( eventId: string, familyId: string ): Pro
 
 
 export async function removeFamilyFromEvent( id: string ): Promise<void> {
+	const { data: familyEvent, error: fetchError } = await supabaseServer
+		.from( 'family_events' )
+		.select( 'event_id' )
+		.eq( 'id', id )
+		.single();
+
+	if ( fetchError ) {
+		throw new Error( fetchError.message );
+	}
+
+	const event = await getEventById( familyEvent.event_id );
+
+	if ( !event ) {
+		throw new Error( 'Evento no encontrado' );
+	}
+
+	if ( event.expires_at && isEventExpired( event.expires_at ) ) {
+		throw new Error( 'El evento ha expirado y no se pueden desasociar familias.' );
+	}
+
 	const { error } = await supabaseServer
 		.from( 'family_events' )
 		.delete()
