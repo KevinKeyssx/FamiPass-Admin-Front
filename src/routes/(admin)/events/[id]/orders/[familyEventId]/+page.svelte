@@ -1,13 +1,14 @@
 <script lang="ts">
-	import { deserialize }        from '$app/forms';
-	import { invalidateAll }      from '$app/navigation';
+	import { deserialize }      from '$app/forms';
+	import { invalidateAll }    from '$app/navigation';
 
-    import { ArrowLeft, Trash2, Users, ShoppingBasket, Plus, Check, X, Clock } from '@lucide/svelte';
+    import { Trash2, Users, ShoppingBasket, Plus, Check, X, Clock } from '@lucide/svelte';
 
     import { isEventExpired }   from '$lib/utils/date.js';
 	import Button               from '$lib/components/ui/Button.svelte';
 	import Modal                from '$lib/components/ui/Modal.svelte';
 	import InputNumber          from '$lib/components/ui/InputNumber.svelte';
+	import ButtonBack           from '$lib/components/ui/ButtonBack.svelte';
 
 
 	interface Props {
@@ -209,22 +210,20 @@
 
 <div class="space-y-8">
 	<!-- Header -->
-	<div class="flex items-center gap-3">
-		<a
-			href="/events/{ data.event.id }"
-			class="p-2 rounded-xl text-(--text-muted) hover:text-(--accent) hover:bg-(--accent-muted) transition-all shrink-0"
-			aria-label="Volver al evento"
-		>
-			<ArrowLeft size={ 20 } />
-		</a>
+	<div class="header-banner group">
+		<div class="header-glow"></div>
 
-		<div>
-			<h1 class="text-2xl font-bold text-(--text-primary)">
-				Administración de Órdenes
-			</h1>
-			<p class="text-sm text-(--text-secondary) mt-1">
-				Gestiona las raciones y entregas de la familia <span class="font-semibold text-(--text-primary)">{ data.familyEvent.family?.family_name }</span>
-			</p>
+		<div class="flex items-center gap-3.5 relative z-10">
+			<ButtonBack href="/events/{ data.event.id }" />
+
+			<div class="space-y-0.5">
+				<h1 class="text-2xl font-extrabold bg-linear-to-r from-text-primary via-accent to-accent bg-clip-text text-transparent tracking-tight">
+					Administración de Órdenes
+				</h1>
+				<p class="text-xs text-text-secondary">
+					Gestiona las raciones y entregas de la familia <span class="font-semibold text-text-primary">{ data.familyEvent.family?.family_name }</span>
+				</p>
+			</div>
 		</div>
 	</div>
 
