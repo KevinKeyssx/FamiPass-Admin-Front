@@ -1,9 +1,5 @@
 import { error, fail, redirect } from '@sveltejs/kit';
 
-import type { PageServerLoad, Actions } from './$types.js';
-import { getEventById }                 from '$lib/server/supabase/services/events.service.js';
-import { getUserRole, getUserByEmail } from '$lib/server/supabase/services/users.service.js';
-import { auth }                         from '$lib/auth/auth.js';
 import {
 	getOrdersByFamilyEventId,
 	updateOrderStatus,
@@ -13,6 +9,11 @@ import {
 }                                       from '$lib/server/supabase/services/orders.service.js';
 import type { OrderStatus, OrderItem }  from '$lib/types/order.js';
 import type { UserRole }                from '$lib/types/user.js';
+import type { PageServerLoad, Actions } from './$types.js';
+import { getEventById }                 from '$lib/server/supabase/services/events.service.js';
+import { isEventExpired }               from '$lib/utils/date.js';
+import { getUserRole, getUserByEmail }  from '$lib/server/supabase/services/users.service.js';
+import { auth }                         from '$lib/auth/auth.js';
 
 
 export const load: PageServerLoad = async ( event ) => {
@@ -80,7 +81,12 @@ export const actions: Actions = {
 			return fail( 404, { error: 'Evento no encontrado' } );
 		}
 
+		if ( dbEvent.expires_at && isEventExpired( dbEvent.expires_at ) ) {
+			return fail( 400, { error: 'El evento ha expirado y no se pueden crear órdenes.' } );
+		}
+
 		const familyEvent = ( dbEvent.family_events || [] ).find( ( fe: any ) => fe.id === params.familyEventId );
+
 
 		if ( !familyEvent ) {
 			return fail( 404, { error: 'Asociación familiar no encontrada' } );
@@ -197,14 +203,25 @@ export const actions: Actions = {
 		}
 	},
 
-	updateStatus: async ( { request } ) => {
+	updateStatus: async ( { request, params } ) => {
 		const session = await auth.api.getSession( { headers: request.headers } );
 
 		if ( !session ) {
 			return fail( 401, { error: 'No autorizado' } );
 		}
 
+		const dbEvent = await getEventById( params.id );
+
+		if ( !dbEvent ) {
+			return fail( 404, { error: 'Evento no encontrado' } );
+		}
+
+		if ( dbEvent.expires_at && isEventExpired( dbEvent.expires_at ) ) {
+			return fail( 400, { error: 'El evento ha expirado y no se pueden modificar órdenes.' } );
+		}
+
 		const formData = await request.formData();
+
 		const orderId  = formData.get( 'orderId' ) as string;
 		const status   = formData.get( 'status' ) as OrderStatus;
 
@@ -220,11 +237,21 @@ export const actions: Actions = {
 		}
 	},
 
-	deleteOrder: async ( { request } ) => {
+	deleteOrder: async ( { request, params } ) => {
 		const session = await auth.api.getSession( { headers: request.headers } );
 
 		if ( !session ) {
 			return fail( 401, { error: 'No autorizado' } );
+		}
+
+		const dbEvent = await getEventById( params.id );
+
+		if ( !dbEvent ) {
+			return fail( 404, { error: 'Evento no encontrado' } );
+		}
+
+		if ( dbEvent.expires_at && isEventExpired( dbEvent.expires_at ) ) {
+			return fail( 400, { error: 'El evento ha expirado y no se pueden eliminar órdenes.' } );
 		}
 
 		const role = await getUserRole( session.user.email ?? '' ) as UserRole;
@@ -234,6 +261,7 @@ export const actions: Actions = {
 		}
 
 		const formData = await request.formData();
+
 		const orderId  = formData.get( 'orderId' ) as string;
 
 		if ( !orderId ) {
