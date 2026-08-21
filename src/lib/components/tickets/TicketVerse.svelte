@@ -13,10 +13,12 @@
 		familyEvent : FamilyEvent & { orders?: Order[] };
 		order?      : Order | null;
 		staffUrl    : string;
+		isExpired?  : boolean;
 	}
 
 
-	let { familyEvent, order = null, staffUrl }: Props = $props();
+	let { familyEvent, order = null, staffUrl, isExpired = false }: Props = $props();
+
 
 	let qrContainer     = $state<HTMLDivElement | null>( null );
 	let qrInstance      : QRCodeStyling | null = null;
@@ -160,10 +162,11 @@
 						<button
 							type="button"
 							onclick={ () => deleteModalOpen = true }
-							disabled={ ordersTaken > 0 }
+							disabled={ ordersTaken > 0 || isExpired }
 							class="p-1 rounded-md text-white/60 hover:text-red-400 hover:bg-white/5 disabled:opacity-30 disabled:hover:text-white/60 disabled:hover:bg-transparent transition-colors shrink-0"
-							title={ ordersTaken > 0 ? 'No se puede eliminar la familia porque ya tiene órdenes' : 'Eliminar familia del evento' }
+							title={ isExpired ? 'El evento ha expirado' : ( ordersTaken > 0 ? 'No se puede eliminar la familia porque ya tiene órdenes' : 'Eliminar familia del evento' ) }
 						>
+
 							<Trash2 size={ 14 } />
 						</button>
 					</div>
