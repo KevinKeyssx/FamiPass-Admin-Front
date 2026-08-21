@@ -1,8 +1,14 @@
 <script lang="ts">
 	import { Users, Crown, User as UserIcon, Edit2, Trash2, Phone, Landmark, CreditCard } from '@lucide/svelte';
-	import type { FamilyMember, CommunityOrganization }                             from '$lib/types/index.js';
-	import { getOrgLabel }                                                           from '../../../utils/constants.js';
-	import FamilyMemberRowForm                                                       from './FamilyMemberRowForm.svelte';
+
+    import type {
+        FamilyMember,
+        CommunityOrganization
+    }                           from '$lib/types/index.js';
+	import { getOrgLabel }      from '../../../utils/constants.js';
+	import FamilyMemberRowForm  from './FamilyMemberRowForm.svelte';
+	import { formatRut }        from '$lib/utils/validation.js';
+
 
 	interface Props {
 		members    : FamilyMember[];
@@ -19,7 +25,8 @@
 		saveError? : string | null;
 	}
 
-	let {
+
+    let {
 		members,
 		onEdit,
 		onDelete,
@@ -86,7 +93,7 @@
 						<div class="flex items-center gap-2 text-text-secondary">
 							<CreditCard size={ 14 } class="text-text-muted shrink-0" />
 							<span class="font-semibold w-12 text-text-muted">RUT:</span>
-							<span class="font-mono text-text-primary">{ m.rut }</span>
+							<span class="font-mono text-text-primary">{ formatRut( m.rut ) }</span>
 						</div>
 
 						<div class="flex items-center gap-2 text-text-secondary">
