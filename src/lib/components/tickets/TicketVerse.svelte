@@ -211,14 +211,14 @@
 					{#if members().length > 0}
 						<div class="space-y-1.5">
 							<div class="flex items-center gap-1.5 opacity-60">
-								<Users size={ 12 } class="text-[var(--t-accent)]" />
-								<span class="text-[9px] font-bold uppercase tracking-wider text-[var(--t-text-muted)]">Miembros familiares</span>
+								<Users size={ 12 } class="text-(--t-accent)" />
+								<span class="text-[9px] font-bold uppercase tracking-wider text-(--t-text-muted)">Miembros familiares</span>
 							</div>
 							<ul class="space-y-1 max-h-24 overflow-y-auto pr-1">
 								{#each members() as member}
 									<li class="flex items-center gap-1.5 text-xs text-white/95">
 										{#if member.is_representative}
-											<Crown size={ 11 } class="text-[var(--t-accent)] shrink-0" />
+											<Crown size={ 11 } class="text-(--t-accent) shrink-0" />
 										{:else}
 											<UserIcon size={ 11 } class="text-white/40 shrink-0" />
 										{/if}
@@ -234,8 +234,8 @@
 					{#if order?.items && order.items.length > 0}
 						<div class="space-y-1.5">
 							<div class="flex items-center gap-1.5 opacity-60">
-								<ShoppingBasket size={ 12 } class="text-[var(--t-accent)]" />
-								<span class="text-[9px] font-bold uppercase tracking-wider text-[var(--t-text-muted)]">Productos reclamados</span>
+								<ShoppingBasket size={ 12 } class="text-(--t-accent)" />
+								<span class="text-[9px] font-bold uppercase tracking-wider text-(--t-text-muted)">Productos reclamados</span>
 							</div>
 							<ul class="space-y-1 max-h-24 overflow-y-auto pr-1">
 								{#each order.items as item}
@@ -260,28 +260,36 @@
 				<div class="t-perf-line"></div>
 			</div>
 		</div>
-		<div class="t-stub">
-			<div class="t-qr-container">
-				{#if qrUrl}
-					<a href="/events/{ familyEvent.event_id }/orders/{ familyEvent.id }" class="t-qr-link">
-						<div bind:this={ qrContainer } class="t-qr-code"></div>
-						<div class="t-qr-id">
-							{ familyEvent.qr_code_hash }
-						</div>
-					</a>
-				{:else}
+		{#if qrUrl}
+			<a href="/events/{ familyEvent.event_id }/orders/{ familyEvent.id }" class="t-stub t-stub-link">
+				<div class="t-qr-container">
+					<div bind:this={ qrContainer } class="t-qr-code"></div>
+					<div class="t-qr-id">
+						{ familyEvent.qr_code_hash }
+					</div>
+				</div>
+				<div class="t-admit">
+					<div class="t-admit-text">Órdenes</div>
+					<div class="t-admit-num">
+						{ ordersTaken }/{ maxOrders }
+					</div>
+				</div>
+			</a>
+		{:else}
+			<div class="t-stub">
+				<div class="t-qr-container">
 					<div class="t-qr-code border border-dashed border-white/20 rounded-lg flex items-center justify-center">
 						<span class="text-[8px] text-white/30 text-center px-1">Sin QR</span>
 					</div>
-				{/if}
-			</div>
-			<div class="t-admit">
-				<div class="t-admit-text">Órdenes</div>
-				<div class="t-admit-num">
-					{ ordersTaken }/{ maxOrders }
+				</div>
+				<div class="t-admit">
+					<div class="t-admit-text">Órdenes</div>
+					<div class="t-admit-num">
+						{ ordersTaken }/{ maxOrders }
+					</div>
 				</div>
 			</div>
-		</div>
+		{/if}
 	</div>
 </div>
 
@@ -546,6 +554,18 @@
 		justify-content: space-between;
 		align-items: center;
 		position: relative;
+		transition: transform 0.3s ease, filter 0.3s ease, box-shadow 0.3s ease;
+	}
+
+	.t-stub-link {
+		text-decoration: none;
+		cursor: pointer;
+		z-index: 5;
+	}
+
+	.t-stub-link:hover {
+		transform: scale( 1.02 );
+		filter: drop-shadow( 0 0 12px var( --t-accent-glow ) );
 	}
 
 	.t-qr-container {
@@ -553,20 +573,6 @@
 		flex-direction: column;
 		gap: 0.5em;
 		align-items: center;
-	}
-
-	.t-qr-link {
-		display: flex;
-		flex-direction: column;
-		gap: 0.5em;
-		align-items: center;
-		text-decoration: none;
-		transition: transform 0.2s ease, filter 0.2s ease;
-	}
-
-	.t-qr-link:hover {
-		transform: scale( 1.05 );
-		filter: drop-shadow( 0 0 8px var( --t-accent-glow ) );
 	}
 
 	.t-qr-code {
