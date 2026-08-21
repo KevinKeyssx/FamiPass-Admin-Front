@@ -4,6 +4,8 @@
 	import { deserialize }      from '$app/forms';
 
 	import { ArrowLeft, Pencil, CalendarDays, Users, Search, Plus } from '@lucide/svelte';
+	import { isEventExpired }   from '$lib/utils/date.js';
+
 
     import type {
 		EventConfig,
@@ -39,6 +41,9 @@
 	let selectedFamilyId = $state<string | null>( null );
 	let modalSearch      = $state( page.url.searchParams.get( 'search' ) || '' );
 	let addError         = $state<string | null>( null );
+
+	const isExpired = $derived( data.event.expires_at ? isEventExpired( data.event.expires_at ) : false );
+
 
 
 	const filteredFamilyEvents = $derived(
@@ -156,7 +161,18 @@
 		</a>
 	</div>
 
+	{#if isExpired}
+		<div class="p-4 rounded-2xl bg-red-500/10 border border-red-500/30 text-red-500 text-sm flex items-center gap-2">
+			<span>⚠️</span>
+			<div>
+				<p class="font-bold">Este evento ha expirado (Fin Canje: { formatDate( data.event.expires_at || '' ) }).</p>
+				<p class="text-xs">No se pueden asociar ni desasociar familias, ni gestionar órdenes para este evento.</p>
+			</div>
+		</div>
+	{/if}
+
 	<!-- Event meta -->
+
 	<div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
 		{#each [
 			{ label: 'Lím. miembros',    value: data.event.max_family_members   ?? '—' },
@@ -187,11 +203,14 @@
 					</h2>
 				</div>
 
-				<Button variant="secondary" onclick={ () => { addModalOpen = true; addError = null; selectedFamilyId = null; } }>
-					<Plus size={ 16 } />
-					Asociar Familia
-				</Button>
+				{#if !isExpired}
+					<Button variant="secondary" onclick={ () => { addModalOpen = true; addError = null; selectedFamilyId = null; } }>
+						<Plus size={ 16 } />
+						Asociar Familia
+					</Button>
+				{/if}
 			</div>
+
 
 			<div class="relative max-w-xs w-full">
 				<Search size={ 15 } class="absolute left-3 top-1/2 -translate-y-1/2 text-(--text-muted) pointer-events-none" />
@@ -224,9 +243,11 @@
 						familyEvent={ fe }
 						order={ fe.orders?.[0] ?? null }
 						{ staffUrl }
+						{ isExpired }
 					/>
 				{/each}
 			</div>
+
 		{/if}
 	</div>
 </div>
