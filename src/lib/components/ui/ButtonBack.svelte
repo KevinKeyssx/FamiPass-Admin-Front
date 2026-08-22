@@ -1,13 +1,39 @@
 <script lang="ts">
-	import { ArrowLeft } from '@lucide/svelte';
+	import { goto } from '$app/navigation';
+
+    import { ArrowLeft } from '@lucide/svelte';
+
 
 	interface Props {
 		href   : string;
 		label? : string;
 	}
 
-	let { href, label = '' }: Props = $props();
+
+    let { href, label = '' }: Props = $props();
+
+
+    function handleKeyDown( event: KeyboardEvent ): void {
+		if ( event.key !== 'Escape' ) return ;
+
+        const active = document.activeElement;
+
+        if (
+            active &&
+            (
+                active.tagName === 'INPUT'
+                || active.tagName === 'TEXTAREA'
+                || active.getAttribute( 'contenteditable' ) === 'true'
+            )
+        ) return;
+
+        goto( href );
+	}
 </script>
+
+
+<svelte:window onkeydown={ handleKeyDown } />
+
 
 <a
 	{ href }
