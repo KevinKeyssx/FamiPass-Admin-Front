@@ -1,11 +1,12 @@
 <script lang="ts">
-	import { Shield, Trash2, Edit2 } from '@lucide/svelte';
+	import { Shield }        from '@lucide/svelte';
 
 	import {
 		getRoleBadgeStyles,
 		getRoleLabel
 	}                       from '../utils/constants';
 	import type { User }    from '$lib/types/index.js';
+	import Actions          from '$lib/components/shared/Actions.svelte';
 
 
 	interface Props {
@@ -80,23 +81,12 @@
 							</td>
 
 							<td class="px-6 py-4">
-								<div class="flex items-center justify-end gap-1.5">
-									<a href="/users/form?id={ user.id }">
-										<button
-											class="p-2 rounded-xl text-text-muted hover:text-accent hover:bg-accent-muted transition-all duration-300 cursor-pointer"
-											title="Editar usuario"
-										>
-											<Edit2 size={ 15 } />
-										</button>
-									</a>
-
-									<button
-										onclick={ () => onDelete( user ) }
-										class="p-2 rounded-xl text-text-muted hover:text-red-500 hover:bg-red-500/10 transition-all duration-300 cursor-pointer"
-										title="Eliminar usuario"
-									>
-										<Trash2 size={ 15 } />
-									</button>
+								<div class="flex justify-end">
+									<Actions
+										editHref="/users/form?id={ user.id }"
+										canDelete={ true }
+										onDelete={ () => onDelete( user ) }
+									/>
 								</div>
 							</td>
 						</tr>
