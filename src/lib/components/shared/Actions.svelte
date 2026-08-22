@@ -19,7 +19,7 @@
 <div class="flex items-center gap-1">
 	<a
 		href        = { editHref }
-		class       = "p-2 rounded-lg text-(--text-secondary) hover:text-(--accent) hover:bg-(--accent-muted) transition-all cursor-pointer"
+		class       = "p-2 rounded-lg hover:text-(--accent) hover:bg-(--accent-muted) transition-all cursor-pointer text-sky-500 dark:text-amber-600"
 		aria-label  = "Editar"
         title       = "Editar"
 	>
@@ -29,7 +29,7 @@
     {#if canDelete }
 		<button
 			onclick     = { onDelete }
-			class       = "p-2 rounded-lg text-(--text-secondary) hover:text-red-500 hover:bg-red-500/10 transition-all cursor-pointer"
+			class       = "p-2 rounded-lg hover:text-red-500 hover:bg-red-500/10 transition-all cursor-pointer text-amber-500 dark:text-red-500"
 			aria-label  = "Eliminar"
             title       = "Eliminar"
 		>

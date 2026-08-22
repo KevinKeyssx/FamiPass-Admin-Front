@@ -10,7 +10,7 @@
 
 <a
 	href        = { href }
-	class       = "p-2 rounded-lg text-(--text-secondary) hover:text-(--accent) hover:bg-(--accent-muted) transition-all cursor-pointer inline-flex items-center justify-center"
+	class       = "p-2 rounded-lg hover:text-(--accent) hover:bg-(--accent-muted) transition-all cursor-pointer inline-flex items-center justify-center text-calypso-500 dark:hover:text-calypso-500 dark:hover:bg-calypso-700/20"
 	aria-label  = "Ver detalles"
 	title       = "Ver detalles"
 >
