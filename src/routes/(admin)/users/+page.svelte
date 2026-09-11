@@ -3,7 +3,7 @@
 	import { page }             from '$app/state';
 	import { goto, invalidate } from '$app/navigation';
 
-    import { UserPlus, Search } from '@lucide/svelte';
+    import { UserPlus } from '@lucide/svelte';
 
 	import type { User as UserType }    from '$lib/types/index.js';
 	import ViewSwitcher                 from '$lib/components/shared/ViewSwitcher.svelte';
@@ -13,11 +13,12 @@
 	import Button                       from '$lib/components/ui/Button.svelte';
 	import Modal                        from '$lib/components/ui/Modal.svelte';
 	import Select                       from '$lib/components/ui/Select.svelte';
+	import SearchInput                  from '$lib/components/ui/SearchInput.svelte';
+	import ButtonCreate                 from '$lib/components/ui/ButtonCreate.svelte';
     import { roleOptions }              from './utils/constants';
 
-
     interface Props {
-		data: {
+		data : {
 			users : UserType[];
 			count : number;
 		};
@@ -53,11 +54,20 @@
 	});
 
 
-    function handleFilterChange(): void {
+	function handleFilterChange( query? : string ) : void {
+		const targetQuery  = query !== undefined ? query : searchQuery;
+		const currentParam = page.url.searchParams.get( 'search' ) || '';
+		const currentRole  = page.url.searchParams.get( 'role' ) || 'ALL';
+		const trimmedQuery = targetQuery.trim();
+
+		if ( trimmedQuery === currentParam && selectedRole === currentRole ) {
+			return;
+		}
+
 		const url = new URL( page.url );
 
-		if ( searchQuery.trim() ) {
-			url.searchParams.set( 'search', searchQuery.trim() );
+		if ( trimmedQuery ) {
+			url.searchParams.set( 'search', trimmedQuery );
 		} else {
 			url.searchParams.delete( 'search' );
 		}
@@ -74,13 +84,6 @@
 			keepFocus    : true,
 			replaceState : true
 		} );
-	}
-
-
-    function handleSearchInput( e: Event ): void {
-		const target = e.target as HTMLInputElement;
-		searchQuery = target.value;
-		handleFilterChange();
 	}
 
 
@@ -106,7 +109,7 @@
 		deleteModal = {
 			open : true,
 			id   : user.id,
-			name : user.full_name
+			name : user.user_name || user.email
 		};
 	}
 
@@ -166,28 +169,20 @@
 			</p>
 		</div>
 
-		<div class="flex items-center gap-3 relative z-10 shrink-0">
+		<div class="flex items-center justify-between sm:justify-end gap-2.5 relative z-10 shrink-0 w-full sm:w-auto">
 			<ViewSwitcher />
 
-			<a href="/users/form">
-				<Button variant="primary">
-					<UserPlus size={ 18 } />
-					Nuevo Usuario
-				</Button>
-			</a>
+			<ButtonCreate href="/users/form" label="Usuario" prefix="Nuevo" icon={ UserPlus } />
 		</div>
 	</div>
 
 	<!-- Filtros -->
 	<div class="form-card !p-4 !space-y-0 flex flex-col md:flex-row gap-4 items-center justify-between">
-		<div class="relative w-full md:max-w-md">
-			<Search size={ 16 } class="absolute left-3.5 top-1/2 -translate-y-1/2 text-text-muted pointer-events-none" />
-			<input
-				type="text"
-				placeholder="Buscar por nombre, rut o email..."
-				value={ searchQuery }
-				oninput={ handleSearchInput }
-				class="w-full pl-10 pr-4 py-2.5 rounded-xl border border-border bg-bg-surface-2 text-text-primary placeholder:text-text-muted text-sm focus:outline-none focus:border-accent focus:ring-4 focus:ring-accent/10 transition-all duration-300"
+		<div class="w-full md:max-w-md">
+			<SearchInput
+				bind:value={ searchQuery }
+				onSearch={ ( q ) => handleFilterChange( q ) }
+				placeholder="Buscar por usuario o email..."
 			/>
 		</div>
 

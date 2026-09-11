@@ -1,22 +1,21 @@
 <script lang="ts">
-	import { deserialize }      from '$app/forms';
-	import { invalidate }       from '$app/navigation';
-	import { page }             from '$app/state';
-
-	import { ArrowLeft, Users, Plus, Crown, User as UserIcon, Trash2, Edit2 } from '@lucide/svelte';
+	import { deserialize }  from '$app/forms';
+	import { invalidate }   from '$app/navigation';
+	import { page }         from '$app/state';
 
 	import type {
 		Family,
 		FamilyMember,
-		CommunityOrganization
+		CommunityOrganization,
+		FamilyMemberRole
 	}                           from '$lib/types/index.js';
 	import ViewSwitcher         from '$lib/components/shared/ViewSwitcher.svelte';
-	import Button               from '$lib/components/ui/Button.svelte';
 	import Modal                from '$lib/components/ui/Modal.svelte';
 	import FamilyMemberForm     from '../../components/FamilyMemberForm.svelte';
 	import FamilyMemberTable    from './components/FamilyMemberTable.svelte';
 	import FamilyMemberCard     from './components/FamilyMemberCard.svelte';
 	import ButtonBack           from '$lib/components/ui/ButtonBack.svelte';
+	import ButtonCreate         from '$lib/components/ui/ButtonCreate.svelte';
 
 
 	interface Props {
@@ -52,7 +51,8 @@
 
 	function scrollToForm(): void {
 		const input = document.getElementById( 'member-full-name' ) || document.querySelector( 'input[placeholder="Ej: Juan Pérez"]' );
-		if ( input ) {
+
+        if ( input ) {
 			input.scrollIntoView( { behavior : 'smooth', block : 'center' } );
 			( input as HTMLInputElement ).focus();
 		}
@@ -67,19 +67,23 @@
 	async function handleSaveMember( memberData: {
 		full_name         : string;
 		rut               : string;
+		email             : string;
 		phone             : string;
 		organization      : CommunityOrganization;
 		is_representative : boolean;
-	} ): Promise<boolean> {
+		role              : FamilyMemberRole;
+	}): Promise<boolean> {
 		saveError = null;
 		isSaving = true;
 
 		const formData = new FormData();
 		formData.append( 'full_name', memberData.full_name );
 		formData.append( 'rut', memberData.rut );
+		formData.append( 'email', memberData.email );
 		formData.append( 'phone', memberData.phone );
 		formData.append( 'organization', memberData.organization );
 		formData.append( 'is_representative', String( memberData.is_representative ) );
+		formData.append( 'role', memberData.role );
 
 		const actionUrl = selectedMember ? `?memberId=${ selectedMember.id }&/save` : '?/save';
 
@@ -181,13 +185,10 @@
 			</div>
 		</div>
 
-		<div class="flex items-center gap-3 relative z-10 shrink-0">
+		<div class="flex items-center justify-between sm:justify-end gap-2.5 relative z-10 shrink-0 w-full sm:w-auto">
 			<ViewSwitcher />
 
-			<Button variant="primary" onclick={ scrollToForm }>
-				<Plus size={ 18 } />
-				Agregar Miembro
-			</Button>
+			<ButtonCreate onclick={ scrollToForm } label="Miembro" prefix="Agregar" />
 		</div>
 	</div>
 

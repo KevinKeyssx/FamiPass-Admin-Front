@@ -3,8 +3,6 @@
 	import { page }             from '$app/state';
 	import { goto, invalidate } from '$app/navigation';
 
-    import { Plus } from '@lucide/svelte';
-
 	import type { EventConfig } from '$lib/types/index.js';
 	import ViewSwitcher         from '$lib/components/shared/ViewSwitcher.svelte';
 	import Pagination           from '$lib/components/shared/Pagination.svelte';
@@ -12,6 +10,7 @@
 	import EventCard            from './components/EventCard.svelte';
 	import EventFilters         from './components/EventFilters.svelte';
 	import Modal                from '$lib/components/ui/Modal.svelte';
+	import ButtonCreate         from '$lib/components/ui/ButtonCreate.svelte';
 
 
     interface Props {
@@ -201,16 +200,10 @@
 			</p>
 		</div>
 
-		<div class="flex items-center gap-3 relative z-10 shrink-0">
+		<div class="flex items-center justify-between sm:justify-end gap-2.5 relative z-10 shrink-0 w-full sm:w-auto">
 			<ViewSwitcher />
 
-			<a
-				href="/events/form"
-				class="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold bg-accent text-accent-text hover:opacity-90 hover:shadow-lg hover:shadow-accent/20 hover:-translate-y-0.5 transition-all duration-300"
-			>
-				<Plus size={ 16 } />
-				Crear Evento
-			</a>
+			<ButtonCreate href="/events/form" label="Evento" prefix="Crear" />
 		</div>
 	</div>
 
