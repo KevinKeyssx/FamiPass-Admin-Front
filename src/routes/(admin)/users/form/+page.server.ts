@@ -1,15 +1,14 @@
 import { fail } from '@sveltejs/kit';
 
 import {
-    getUserById,
-    createUser,
-    updateUser,
-    getUserRole
+	getUserById,
+	createUser,
+	updateUser,
+	getUserRole
 }                                       from '$lib/server/supabase/services/users.service.js';
 import type { PageServerLoad, Actions } from './$types.js';
 import { auth }                         from '$lib/auth/auth.js';
 import type { User, UserRole }          from '$lib/types/index.js';
-
 
 export const load: PageServerLoad = async ( event ) => {
 	const userId = event.url.searchParams.get( 'id' );
@@ -37,7 +36,6 @@ export const actions: Actions = {
 		const userId   = event.url.searchParams.get( 'id' );
 		const formData = await event.request.formData();
 
-		const fullName		= formData.get( 'full_name' ) as string;
 		const userName		= formData.get( 'user_name' ) as string;
 		const emailPrefix	= formData.get( 'email' ) as string;
 		const email			= emailPrefix ? `${ emailPrefix.trim() }@gmail.com` : '';
@@ -46,8 +44,8 @@ export const actions: Actions = {
 		const isActive		= formData.get( 'is_active' ) === 'true';
 
 		// Validaciones Básicas
-		if ( !fullName || !fullName.trim() ) {
-			return fail( 400, { error: 'El nombre completo es requerido.' } );
+		if ( !userName || !userName.trim() ) {
+			return fail( 400, { error: 'El nombre de usuario es requerido.' } );
 		}
 
 		if ( !email || !email.trim() ) {
@@ -67,9 +65,8 @@ export const actions: Actions = {
 		}
 
 		const userData: Omit<User, 'id' | 'created_at' | 'updated_at'> = {
-			full_name	: fullName.trim(),
-			user_name	: userName ? userName.trim() : null,
 			email		: email.trim(),
+			user_name	: userName.trim(),
 			phone		: phone ? phone.trim() : null,
 			role		: role,
 			is_active	: isActive
