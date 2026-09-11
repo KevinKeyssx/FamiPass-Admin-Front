@@ -265,7 +265,7 @@
 				<div class="t-qr-container">
 					<div bind:this={ qrContainer } class="t-qr-code"></div>
 					<div class="t-qr-id">
-						{ familyEvent.qr_code_hash }
+						CÓD: { familyEvent.short_code || familyEvent.qr_code_hash }
 					</div>
 				</div>
 				<div class="t-admit">
