@@ -50,9 +50,11 @@
 >
 	<!-- Logo -->
 	<div class="flex items-center gap-3 px-6 py-5 border-b border-(--border) group/logo select-none">
-		<div class="w-9 h-9 rounded-xl bg-(--accent) flex items-center justify-center shadow-(--shadow-glow) transition-transform duration-300 group-hover/logo:rotate-12 group-hover/logo:scale-105">
-			<span class="text-(--accent-text) font-bold text-lg">F</span>
-		</div>
+		<img
+			src="/logo/logo_small.avif"
+			alt="Logo FamiPass"
+			class="w-9 h-9 object-contain drop-shadow-sm transition-transform duration-300 group-hover/logo:scale-105 select-none"
+		/>
 
 		<div>
 			<p class="font-bold text-(--text-primary) leading-tight transition-colors group-hover/logo:text-(--accent)">FamiPass</p>
@@ -65,7 +67,7 @@
 		{#each navItems as { href, label, Icon }}
 			{@const isActive = currentPath.startsWith( href )}
 			<a
-                data-sveltekit-preload-data="hover"
+				data-sveltekit-preload-data="hover"
 				{href}
 				class="flex items-center gap-3 px-3 py-2.5 rounded-xl font-medium text-sm
                     transition-all duration-300 group border-l-2 border-transparent
@@ -75,12 +77,12 @@
 				onclick={ () => { sidebarOpen = false; } }
 			>
 				<Icon
-					size={18}
+					size={ 18 }
 					class="transition-transform duration-300 group-hover:scale-110 group-hover:rotate-3
                         {isActive ? 'text-(--accent)' : 'text-(--text-muted)'}"
 				/>
 
-				{label}
+				{ label }
 
 				{#if isActive}
 					<span class="ml-auto w-1.5 h-1.5 rounded-full bg-(--accent) animate-pulse"></span>
@@ -111,7 +113,7 @@
                     text-(--text-secondary) hover:text-red-500 hover:bg-red-500/10
                     transition-all duration-300 group/btn"
 			>
-				<LogOut size={16} class="transition-transform duration-300 group-hover/btn:-translate-x-0.5" />
+				<LogOut size={ 16 } class="transition-transform duration-300 group-hover/btn:-translate-x-0.5" />
 				Cerrar sesión
 			</button>
 
