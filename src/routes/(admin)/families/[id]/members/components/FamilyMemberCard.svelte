@@ -1,14 +1,28 @@
 <script lang="ts">
-	import { Users, Crown, User as UserIcon, Edit2, Trash2, Phone, Landmark, CreditCard } from '@lucide/svelte';
+	import {
+		Users,
+		Crown,
+		User as UserIcon,
+		Edit2,
+		Trash2,
+		Phone,
+		Mail,
+		Landmark,
+		CreditCard
+	}                               from '@lucide/svelte';
 
-    import type {
-        FamilyMember,
-        CommunityOrganization
-    }                           from '$lib/types/index.js';
-	import { getOrgLabel }      from '../../../utils/constants.js';
-	import FamilyMemberRowForm  from './FamilyMemberRowForm.svelte';
-	import { formatRut }        from '$lib/utils/validation.js';
-
+	import type {
+		FamilyMember,
+		CommunityOrganization,
+		FamilyMemberRole
+	}                               from '$lib/types/index.js';
+	import {
+		getOrgLabel,
+		getFamilyRoleLabel,
+		getFamilyRoleBadgeStyles
+	}                               from '../../../utils/constants.js';
+	import FamilyMemberRowForm      from './FamilyMemberRowForm.svelte';
+	import { formatRut }            from '$lib/utils/validation.js';
 
 	interface Props {
 		members    : FamilyMember[];
@@ -17,16 +31,17 @@
 		onAdd      : ( data: {
 			full_name         : string;
 			rut               : string;
+			email             : string;
 			phone             : string;
 			organization      : CommunityOrganization;
 			is_representative : boolean;
+			role              : FamilyMemberRole;
 		} ) => Promise<boolean>;
 		isSaving?  : boolean;
 		saveError? : string | null;
 	}
 
-
-    let {
+	let {
 		members,
 		onEdit,
 		onDelete,
@@ -61,11 +76,17 @@
 								<h3 class="font-bold text-sm text-text-primary truncate" title={ m.full_name }>
 									{ m.full_name }
 								</h3>
-								{#if m.is_representative}
-									<span class="inline-flex items-center text-[10px] font-bold text-accent bg-accent-muted px-1.5 py-0.5 rounded-md mt-0.5 select-none">
-										Representante
+								<div class="flex items-center gap-1.5 mt-0.5 flex-wrap">
+									<span class="inline-flex items-center text-[10px] font-bold border px-1.5 py-0.2 rounded-md select-none { getFamilyRoleBadgeStyles( m.role ) }">
+										{ getFamilyRoleLabel( m.role ) }
 									</span>
-								{/if}
+
+                                    {#if m.is_representative}
+										<span class="inline-flex items-center text-[10px] font-bold text-accent bg-accent-muted px-1.5 py-0.2 rounded-md select-none">
+											Representante
+										</span>
+									{/if}
+								</div>
 							</div>
 						</div>
 
@@ -92,19 +113,27 @@
 					<div class="space-y-2.5 text-xs border-t border-border/40 pt-3">
 						<div class="flex items-center gap-2 text-text-secondary">
 							<CreditCard size={ 14 } class="text-text-muted shrink-0" />
-							<span class="font-semibold w-12 text-text-muted">RUT:</span>
+							<span class="font-semibold w-14 text-text-muted">RUT:</span>
 							<span class="font-mono text-text-primary">{ formatRut( m.rut ) }</span>
 						</div>
 
+						{#if m.email}
+							<div class="flex items-center gap-2 text-text-secondary">
+								<Mail size={ 14 } class="text-text-muted shrink-0" />
+								<span class="font-semibold w-14 text-text-muted">Email:</span>
+								<span class="text-text-primary truncate" title={ m.email }>{ m.email }</span>
+							</div>
+						{/if}
+
 						<div class="flex items-center gap-2 text-text-secondary">
 							<Phone size={ 14 } class="text-text-muted shrink-0" />
-							<span class="font-semibold w-12 text-text-muted">Teléfono:</span>
+							<span class="font-semibold w-14 text-text-muted">Teléfono:</span>
 							<span class="text-text-primary">{ m.phone || '—' }</span>
 						</div>
 
 						<div class="flex items-center gap-2 text-text-secondary">
 							<Landmark size={ 14 } class="text-text-muted shrink-0" />
-							<span class="font-semibold w-12 text-text-muted">Org:</span>
+							<span class="font-semibold w-14 text-text-muted">Org:</span>
 							<span class="text-text-primary truncate" title={ getOrgLabel( m.organization ) }>
 								{ getOrgLabel( m.organization ) }
 							</span>
@@ -127,11 +156,12 @@
 				<thead>
 					<tr class="border-b border-border bg-bg-surface-2/50 select-none">
 						<th class="text-left px-4 py-2 text-xs font-semibold uppercase tracking-wider text-text-secondary/80 w-1/4">Nombre</th>
-						<th class="text-left px-4 py-2 text-xs font-semibold uppercase tracking-wider text-text-secondary/80 w-1/5">RUT</th>
-						<th class="text-left px-4 py-2 text-xs font-semibold uppercase tracking-wider text-text-secondary/80 w-1/6">Teléfono</th>
-						<th class="text-left px-4 py-2 text-xs font-semibold uppercase tracking-wider text-text-secondary/80 w-1/5">Organización</th>
+						<th class="text-left px-4 py-2 text-xs font-semibold uppercase tracking-wider text-text-secondary/80 w-1/6">RUT</th>
+						<th class="text-left px-4 py-2 text-xs font-semibold uppercase tracking-wider text-text-secondary/80 w-1/6">Contacto</th>
+						<th class="text-left px-4 py-2 text-xs font-semibold uppercase tracking-wider text-text-secondary/80 w-1/6">Organización</th>
+						<th class="text-left px-4 py-2 text-xs font-semibold uppercase tracking-wider text-text-secondary/80 w-1/12">Rol</th>
 						<th class="text-center px-4 py-2 text-xs font-semibold uppercase tracking-wider text-text-secondary/80 w-1/12">Representante</th>
-						<th class="text-right px-4 py-2 text-xs font-semibold uppercase tracking-wider text-text-secondary/80 w-1/10">Acciones</th>
+						<th class="text-right px-4 py-2 text-xs font-semibold uppercase tracking-wider text-text-secondary/80 w-1/12">Acciones</th>
 					</tr>
 				</thead>
 				<tbody class="divide-y divide-border">
@@ -139,7 +169,7 @@
 
 					{#if saveError}
 						<tr class="bg-red-500/5 select-none">
-							<td colspan="6" class="px-4 py-2 text-sm text-red-500 text-right font-medium">
+							<td colspan="7" class="px-4 py-2 text-sm text-red-500 text-right font-medium">
 								{ saveError }
 							</td>
 						</tr>
