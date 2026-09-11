@@ -3,16 +3,15 @@
 	import { goto, invalidate } from '$app/navigation';
 	import { page }             from '$app/state';
 
-	import { User, Building, AlertCircle } from '@lucide/svelte';
+	import { User, Building, CircleAlert } from '@lucide/svelte';
 
 	import type { User as UserType, UserRole }  from '$lib/types/index.js';
-	import { getFilteredRoleOptions }           from '../utils/constants';
+	import { getFilteredRoleOptions }           from '../utils/constants.js';
 	import Button                               from '$lib/components/ui/Button.svelte';
 	import InputText                            from '$lib/components/ui/InputText.svelte';
 	import Select                               from '$lib/components/ui/Select.svelte';
 	import Checkbox                             from '$lib/components/ui/Checkbox.svelte';
 	import ButtonBack                           from '$lib/components/ui/ButtonBack.svelte';
-
 
 	interface Props {
 		data: {
@@ -21,9 +20,7 @@
 		};
 	}
 
-
 	interface FormState {
-		full_name : string;
 		user_name : string;
 		email     : string;
 		role      : UserRole;
@@ -31,25 +28,21 @@
 		is_active : boolean;
 	}
 
-
 	let { data }: Props = $props();
-
 
 	const userId              = $derived( page.url.searchParams.get( 'id' ) );
 	const isEdit              = $derived( !!userId );
 	const filteredRoleOptions = $derived( getFilteredRoleOptions( data.currentUserRole ) );
 
-
 	let errorMsg = $state<string | null>( null );
 	let isSaving = $state( false );
 	let errors   = $state<Record<string, string | null>>( {
-		full_name : null,
+		user_name : null,
 		email     : null
 	} );
 
 	// svelte-ignore state_referenced_locally
 	let form = $state<FormState>( {
-		full_name	: data.user?.full_name ?? '',
 		user_name	: data.user?.user_name ?? '',
 		email		: data.user?.email ? data.user.email.replace( '@gmail.com', '' ) : '',
 		role		: data.user?.role      ?? 'MEMBER',
@@ -57,31 +50,28 @@
 		is_active	: data.user?.is_active ?? true
 	} );
 
-
 	function handleEmailKeyDown( e: KeyboardEvent ): void {
 		if ( e.key === '@' ) {
 			e.preventDefault();
 		}
 	}
 
-
 	function handleEmailPaste( e: ClipboardEvent ): void {
 		e.preventDefault();
 
-		const pastedText = e.clipboardData?.getData( 'text' ) || '';
-		const cleanText  = pastedText.split( '@' )[ 0 ];
-		const input      = e.target as HTMLInputElement;
-		const start      = input.selectionStart || 0;
-		const end        = input.selectionEnd || 0;
+		const pastedText   = e.clipboardData?.getData( 'text' ) || '';
+		const cleanText    = pastedText.split( '@' )[ 0 ];
+		const input        = e.target as HTMLInputElement;
+		const start        = input.selectionStart || 0;
+		const end          = input.selectionEnd || 0;
 		const currentValue = form.email;
 
-		form.email       = currentValue.slice( 0, start ) + cleanText + currentValue.slice( end );
+		form.email = currentValue.slice( 0, start ) + cleanText + currentValue.slice( end );
 
 		setTimeout( () => {
 			input.selectionStart = input.selectionEnd = start + cleanText.length;
 		}, 0 );
 	}
-
 
 	function handleEmailInput( e: Event ): void {
 		const input = e.target as HTMLInputElement;
@@ -92,21 +82,20 @@
 		}
 	}
 
-
 	async function handleSubmit( e: SubmitEvent ): Promise<void> {
 		e.preventDefault();
 
 		errorMsg = null;
 
 		errors = {
-			full_name : null,
+			user_name : null,
 			email     : null
 		};
 
 		let hasError = false;
 
-		if ( !form.full_name.trim() ) {
-			errors.full_name = 'El nombre completo es requerido.';
+		if ( !form.user_name.trim() ) {
+			errors.user_name = 'El nombre de usuario es requerido.';
 			hasError = true;
 		}
 
@@ -121,8 +110,7 @@
 
 		const formData = new FormData();
 
-		formData.append( 'full_name', form.full_name.trim() );
-		formData.append( 'user_name', form.user_name ? form.user_name.trim() : '' );
+		formData.append( 'user_name', form.user_name.trim() );
 		formData.append( 'email', form.email.trim() );
 		formData.append( 'role', form.role );
 		formData.append( 'phone', form.phone ? form.phone.trim() : '' );
@@ -173,7 +161,7 @@
 				</h1>
 
 				<p class="text-xs text-text-secondary">
-					{ isEdit ? `Modificando credenciales de ${ data.user?.full_name }` : 'Ingresa los datos del nuevo usuario' }
+					{ isEdit ? `Modificando credenciales de ${ data.user?.user_name || data.user?.email }` : 'Ingresa los datos del nuevo usuario' }
 				</p>
 			</div>
 		</div>
@@ -190,12 +178,12 @@
 
 			<div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
 				<InputText
-					label="Nombre completo"
-					id="full-name"
+					label="Nombre de usuario"
+					id="user-name"
 					required={ true }
-					placeholder="Ej: Juan Pérez"
-					bind:value={ form.full_name }
-					error={ errors.full_name }
+					placeholder="Ej: juan.perez"
+					bind:value={ form.user_name }
+					error={ errors.user_name }
 				/>
 
 				<div class="flex flex-col gap-1.5 w-full">
@@ -228,18 +216,11 @@
 
 					{#if errors.email}
 						<div class="flex items-center gap-1.5 text-xs text-red-500 animate-in fade-in duration-200 mt-0.5">
-							<AlertCircle size={ 14 } class="shrink-0" />
+							<CircleAlert size={ 14 } class="shrink-0" />
 							<span>{ errors.email }</span>
 						</div>
 					{/if}
 				</div>
-
-				<InputText
-					label="Nombre de usuario / Apodo (Opcional)"
-					id="user-name"
-					placeholder="Ej: juan.perez"
-					bind:value={ form.user_name }
-				/>
 
 				<InputText
 					label="Teléfono de contacto (Opcional)"
@@ -247,15 +228,15 @@
 					placeholder="Ej: +56912345678"
 					bind:value={ form.phone }
 				/>
-			</div>
 
-            <Select
-                label="Rol del sistema"
-                placeholder="Selecciona el rol"
-                required={ true }
-                options={ filteredRoleOptions }
-                bind:value={ form.role }
-            />
+				<Select
+					label="Rol del sistema"
+					placeholder="Selecciona el rol"
+					required={ true }
+					options={ filteredRoleOptions }
+					bind:value={ form.role }
+				/>
+			</div>
 		</div>
 
 		<!-- Ajustes adicionales -->
