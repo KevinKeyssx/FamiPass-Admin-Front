@@ -254,6 +254,10 @@
 					<p class="text-xs text-(--text-muted)">Miembros Registrados</p>
 					<p class="font-semibold text-(--text-primary)">{ totalMembersCount } ({ adultsCount } Adultos / { childrenCount } Niños)</p>
 				</div>
+				<div>
+					<p class="text-xs text-(--text-muted)">Código de Ticket</p>
+					<p class="font-mono font-bold text-xs text-(--accent)">{ data.familyEvent.short_code || data.familyEvent.qr_code_hash }</p>
+				</div>
 			</div>
 		</div>
 
@@ -410,7 +414,7 @@
 							<p class="text-[10px] font-mono text-(--text-muted) uppercase">Orden #{ o.id.slice( 0, 8 ) }</p>
 							<p class="text-xs text-(--text-secondary) mt-0.5">{ formatDate( o.created_at ) }</p>
 							<p class="text-[11px] text-(--text-muted) mt-1">
-								Registrado por: <span class="font-medium text-(--text-secondary)">{ o.scanned_by_user?.full_name ?? 'Administrador' }</span>
+								Registrado por: <span class="font-medium text-(--text-secondary)">{ o.scanned_by_user?.user_name || o.scanned_by_user?.email || 'Administrador' }</span>
 							</p>
 						</div>
 
