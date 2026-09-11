@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { page }       from '$app/stores';
+	import { page }       from '$app/state';
 	import { theme }      from '$lib/stores/theme.svelte.js';
 	import { Sun, Moon }  from '@lucide/svelte';
 	import { authClient } from '$lib/auth/auth-client.js';
@@ -7,12 +7,12 @@
 	let loading  = $state( false );
 	let errorMsg = $state<string | null>( null );
 
-	const errorParam = $derived( $page.url.searchParams.get( 'error' ) );
-	const errorMap: Record<string, string> = {
-		unauthorized: 'Tu cuenta no tiene permisos de administrador.',
+	const errorParam = $derived( page.url.searchParams.get( 'error' ) );
+	const errorMap : Record<string, string> = {
+		unauthorized : 'Tu cuenta no tiene permisos de administrador.',
 	};
 
-	async function handleGoogleLogin(): Promise<void> {
+	async function handleGoogleLogin() : Promise<void> {
 		loading  = true;
 		errorMsg = null;
 		try {
@@ -39,14 +39,14 @@
 
 	<!-- Theme toggle -->
 	<button
-		onclick={() => theme.toggle()}
+		onclick={ () => theme.toggle() }
 		class="absolute top-4 right-4 p-2.5 rounded-xl text-(--text-secondary) hover:text-(--accent) hover:bg-(--accent-muted) transition-all duration-200 border border-(--border)"
-		aria-label={theme.isDark ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro'}
+		aria-label={ theme.isDark ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro' }
 	>
 		{#if theme.isDark}
-			<Sun size={20} />
+			<Sun size={ 20 } />
 		{:else}
-			<Moon size={20} />
+			<Moon size={ 20 } />
 		{/if}
 	</button>
 
@@ -55,10 +55,12 @@
 
 		<!-- Logo & Title -->
 		<div class="flex flex-col items-center mb-8 text-center">
-			<div class="w-16 h-16 rounded-2xl bg-(--accent) flex items-center justify-center mb-4 shadow-(--shadow-glow)">
-				<span class="text-(--accent-text) font-bold text-3xl">F</span>
-			</div>
-			<h1 class="text-2xl font-bold text-(--text-primary)">FamiPass Admin</h1>
+			<img
+				src="/logo/logo_medium.avif"
+				alt="FamiPass Logo"
+				class="w-20 h-20 object-contain mb-4 drop-shadow-md transition-transform duration-300 hover:scale-105 select-none"
+			/>
+			<h1 class="text-2xl font-black text-(--text-primary) tracking-tight">FamiPass Admin</h1>
 			<p class="text-(--text-secondary) mt-1 text-sm">
 				Panel de Administración
 			</p>
@@ -80,8 +82,8 @@
 
 		<!-- Google login button -->
 		<button
-			onclick={handleGoogleLogin}
-			disabled={loading}
+			onclick={ handleGoogleLogin }
+			disabled={ loading }
 			class="w-full flex items-center justify-center gap-3 px-6 py-3.5 rounded-xl font-medium text-sm
                 bg-(--bg-surface-2) border border-(--border) text-(--text-primary)
                 hover:border-(--accent) hover:shadow-(--shadow-md) transition-all duration-200
