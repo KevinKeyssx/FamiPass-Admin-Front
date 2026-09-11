@@ -3,36 +3,33 @@
 	import { page }             from '$app/state';
 	import { goto, invalidate } from '$app/navigation';
 
-    import { Plus, Search, Funnel } from '@lucide/svelte';
+    import { Funnel } from '@lucide/svelte';
 
 	import type { Product } from '$lib/types/index.js';
 	import ViewSwitcher     from '$lib/components/shared/ViewSwitcher.svelte';
 	import Pagination       from '$lib/components/shared/Pagination.svelte';
 	import ProductTable     from './components/ProductTable.svelte';
 	import ProductCard      from './components/ProductCard.svelte';
-	import Button           from '$lib/components/ui/Button.svelte';
 	import Modal            from '$lib/components/ui/Modal.svelte';
-
+	import SearchInput      from '$lib/components/ui/SearchInput.svelte';
+	import ButtonCreate     from '$lib/components/ui/ButtonCreate.svelte';
 
     interface Props {
-		data: {
+		data : {
 			products : Product[];
 			count    : number;
 		};
 	}
 
-
     let { data } : Props = $props();
-
 
     const filterStatus  = $derived( ( page.url.searchParams.get( 'status' ) || 'ALL' ) as 'ALL' | 'ACTIVE' | 'INACTIVE' );
 	const currentView   = $derived( page.url.searchParams.get( 'view' ) || 'card' );
 
-
 	let searchQuery = $state( page.url.searchParams.get( 'search' ) || '' );
-    let deleteError = $state<string | null>( null );
-    let isDeleting  = $state( false );
-    let deleteModal = $state<{
+	let deleteError = $state<string | null>( null );
+	let isDeleting  = $state( false );
+	let deleteModal = $state<{
 		open : boolean;
 		id   : string | null;
 		name : string;
@@ -42,29 +39,35 @@
 		name : ''
 	} );
 
-
-    const statusOptions: Array<{ value: 'ALL' | 'ACTIVE' | 'INACTIVE'; label: string }> = [
-		{ value: 'ALL',      label: 'Todos' },
-		{ value: 'ACTIVE',   label: 'Activos' },
-		{ value: 'INACTIVE', label: 'Inactivos' }
+	const statusOptions : Array<{ value : 'ALL' | 'ACTIVE' | 'INACTIVE'; label : string }> = [
+		{ value : 'ALL',      label : 'Todos' },
+		{ value : 'ACTIVE',   label : 'Activos' },
+		{ value : 'INACTIVE', label : 'Inactivos' }
 	];
 
+	function handleSearch( query? : string ) : void {
+		const targetQuery  = query !== undefined ? query : searchQuery;
+		const currentParam = page.url.searchParams.get( 'search' ) || '';
+		const trimmedQuery = targetQuery.trim();
 
-    function handleSearch(): void {
+		if ( trimmedQuery === currentParam ) {
+			return;
+		}
+
 		const url = new URL( page.url );
 
-        if ( searchQuery.trim() ) {
-			url.searchParams.set( 'search', searchQuery.trim() );
+		if ( trimmedQuery ) {
+			url.searchParams.set( 'search', trimmedQuery );
 		} else {
 			url.searchParams.delete( 'search' );
 		}
 
-        url.searchParams.set( 'page', '1' );
+		url.searchParams.set( 'page', '1' );
 
-        goto( url.pathname + url.search, {
+		goto( url.pathname + url.search, {
 			keepFocus    : true,
 			replaceState : true
-		});
+		} );
 	}
 
 
@@ -143,59 +146,44 @@
 			<h1 class="text-2xl font-extrabold bg-linear-to-r from-text-primary via-accent to-accent bg-clip-text text-transparent tracking-tight">
 				Productos
 			</h1>
-			<p class="text-xs text-(--text-secondary) mt-0.5">
+
+            <p class="text-xs text-(--text-secondary) mt-0.5">
 				Gestión del catálogo de productos de FamiPass
 			</p>
 		</div>
 
-		<div class="flex items-center gap-3 relative z-10 shrink-0">
+		<div class="flex items-center justify-between sm:justify-end gap-2.5 relative z-10 shrink-0 w-full sm:w-auto">
 			<ViewSwitcher />
 
-			<a href="/products/form">
-				<Button variant="primary">
-					<Plus size={ 16 } />
-					Nuevo Producto
-				</Button>
-			</a>
+			<ButtonCreate href="/products/form" label="Producto" prefix="Nuevo" />
 		</div>
 	</div>
 
 	<!-- Controls / Filters & Search -->
 	<div class="card p-4 flex flex-col md:flex-row gap-4 items-stretch md:items-center justify-between">
 		<!-- Search input -->
-		<div class="relative flex-1">
-			<Search size={ 16 } class="absolute left-3.5 top-1/2 -translate-y-1/2 text-(--text-muted) pointer-events-none" />
-
-            <input
-				type="text"
+		<div class="flex-1">
+			<SearchInput
 				bind:value={ searchQuery }
+				onSearch={ handleSearch }
 				placeholder="Buscar productos por nombre..."
-				onkeydown={ ( e ) => e.key === 'Enter' && handleSearch() }
-				class="w-full pl-10 pr-24 py-2.5 rounded-xl border border-(--border)/60 transition-all duration-300
-					bg-(--bg-surface-2) text-(--text-primary) placeholder:text-(--text-muted) text-sm
-					focus:outline-none focus:border-(--accent) focus:ring-4 focus:ring-(--accent)/10"
 			/>
-
-            <button
-				onclick={ handleSearch }
-				class="absolute right-1.5 top-1/2 -translate-y-1/2 px-3 py-1.5 rounded-lg text-xs font-semibold
-					bg-(--accent) text-(--accent-text) hover:bg-(--accent-hover) transition-colors cursor-pointer"
-			>
-				Buscar
-			</button>
 		</div>
 
 		<!-- Status Filter buttons -->
 		<div class="flex items-center gap-3 flex-wrap">
 			<div class="flex items-center gap-1.5">
 				<Funnel size={ 14 } class="text-(--text-secondary)" />
-				<span class="text-xs text-(--text-secondary) font-semibold uppercase tracking-wider">Filtrar:</span>
+
+				<span class="text-xs text-(--text-secondary) font-semibold uppercase tracking-wider">
+					Filtrar:
+				</span>
 			</div>
 
-            <div class="inline-flex rounded-full border border-(--border)/60 p-0.5 bg-(--bg-surface-2)">
+			<div class="inline-flex rounded-full border border-(--border)/60 p-0.5 bg-(--bg-surface-2)">
 				{#each statusOptions as opt}
 					<button
-						onclick={() => { handleStatusFilter( opt.value ); }}
+						onclick={ () => { handleStatusFilter( opt.value ); } }
 						class="px-3.5 py-1 rounded-full text-xs font-semibold transition-all duration-200 cursor-pointer
 							{ filterStatus === opt.value
 								? 'bg-(--accent) text-(--accent-text) shadow-sm'
@@ -210,7 +198,7 @@
 
 	<!-- Products List (Table or Card View) -->
 	<div class="flex flex-col">
-		{#if currentView === 'table' }
+		{#if currentView === 'table'}
 			<ProductTable products={ data.products } onDelete={ openDeleteModal } />
 		{:else}
 			<ProductCard products={ data.products } onDelete={ openDeleteModal } />
@@ -225,15 +213,16 @@
 <Modal
 	open={ deleteModal.open }
 	title="Eliminar producto"
-	onClose={() => { deleteModal = { open: false, id: null, name: '' }; deleteError = null; }}
+	onClose={ () => { deleteModal = { open : false, id : null, name : '' }; deleteError = null; } }
 	onConfirm={ confirmDelete }
 	confirmLabel="Eliminar"
 	confirmVariant="danger"
 	loading={ isDeleting }
 >
 	<p>¿Estás seguro de que deseas eliminar el producto <strong class="text-(--text-primary)">"{ deleteModal.name }"</strong>?</p>
+
 	<p class="mt-2 text-xs">Esta acción eliminará de forma permanente el producto. No se puede deshacer.</p>
-	{#if deleteError }
+	{#if deleteError}
 		<p class="mt-3 text-red-500 text-sm">{ deleteError }</p>
 	{/if}
 </Modal>
