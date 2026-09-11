@@ -1,8 +1,9 @@
 <script lang="ts">
-	import { Search, X }      from '@lucide/svelte';
+	import { X }               from '@lucide/svelte';
 	import DatePicker          from '$lib/components/ui/DatePicker.svelte';
 	import Select              from '$lib/components/ui/Select.svelte';
 	import FilterButtonGroup   from '$lib/components/ui/FilterButtonGroup.svelte';
+	import SearchInput         from '$lib/components/ui/SearchInput.svelte';
 
 	interface Props {
 		searchQuery          : string;
@@ -22,14 +23,14 @@
 		selectedMinors       = $bindable(),
 		onSearch,
 		onClearAll
-	}: Props = $props();
+	} : Props = $props();
 
 	const statusOptions = [
-		{ value: 'ALL',         label: 'Todos los estados' },
-		{ value: 'DRAFT',       label: 'Borrador' },
-		{ value: 'IN_PROGRESS', label: 'En Curso' },
-		{ value: 'FINISHED',    label: 'Finalizado' },
-		{ value: 'CANCELLED',   label: 'Cancelado' }
+		{ value : 'ALL',         label : 'Todos los estados' },
+		{ value : 'DRAFT',       label : 'Borrador' },
+		{ value : 'IN_PROGRESS', label : 'En Curso' },
+		{ value : 'FINISHED',    label : 'Finalizado' },
+		{ value : 'CANCELLED',   label : 'Cancelado' }
 	];
 
 	const hasActiveFilters = $derived(
@@ -45,25 +46,11 @@
 	<!-- Single line grid container with exactly 4 columns on desktop -->
 	<div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 items-center">
 		<!-- 1. Search text -->
-		<div class="relative w-full">
-			<Search size={ 16 } class="absolute left-3.5 top-1/2 -translate-y-1/2 text-text-muted pointer-events-none" />
-			<input
-				type="text"
-				bind:value={ searchQuery }
-				placeholder="Buscar eventos..."
-				onkeydown={ ( e ) => e.key === 'Enter' && onSearch() }
-				class="w-full pl-10 pr-24 py-2.5 rounded-xl border border-border/60 transition-all duration-300
-					bg-bg-surface-2 text-text-primary placeholder:text-text-muted text-sm
-					focus:outline-none focus:border-accent focus:ring-4 focus:ring-accent/10"
-			/>
-			<button
-				onclick={ onSearch }
-				class="absolute right-1.5 top-1/2 -translate-y-1/2 px-3 py-1.5 rounded-lg text-xs font-semibold
-					bg-accent text-accent-text hover:bg-accent-hover transition-colors cursor-pointer"
-			>
-				Buscar
-			</button>
-		</div>
+		<SearchInput
+			bind:value={ searchQuery }
+			onSearch={ onSearch }
+			placeholder="Buscar eventos..."
+		/>
 
 		<!-- 2. Date Picker -->
 		<div class="flex items-center gap-2 w-full">
