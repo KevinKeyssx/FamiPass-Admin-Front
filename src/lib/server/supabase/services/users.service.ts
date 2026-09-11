@@ -2,43 +2,42 @@ import { supabaseServer } from '../supabase.js';
 
 import type { User, UserRole } from '$lib/types/index.js';
 
-
 export async function getUserRole(
 	email: string
-): Promise<string | null> {
+): Promise<UserRole | null> {
 	const { data } = await supabaseServer
 		.from( 'users' )
 		.select( 'role' )
 		.eq( 'email', email )
 		.single();
 
-	return data?.role ?? null;
+	return ( data?.role as UserRole ) ?? null;
 }
 
 export async function getUsers( params?: {
-	search?   : string;
-	role?     : 'ALL' | UserRole;
-	page?     : number;
-	pageSize? : number;
+	search?		: string;
+	role?		: 'ALL' | UserRole;
+	page?		: number;
+	pageSize?	: number;
 } ): Promise<{ data: User[]; count: number }> {
-	const search   = params?.search || '';
-	const role     = params?.role || 'ALL';
-	const page     = params?.page || 1;
-	const pageSize = params?.pageSize || 12;
+	const search	= params?.search || '';
+	const role		= params?.role || 'ALL';
+	const page		= params?.page || 1;
+	const pageSize	= params?.pageSize || 12;
 
 	let query = supabaseServer
 		.from( 'users' )
 		.select( '*', { count: 'exact' } );
 
 	if ( search ) {
-		query = query.or( `full_name.ilike.%${ search }%,email.ilike.%${ search }%` );
+		query = query.or( `user_name.ilike.%${ search }%,email.ilike.%${ search }%` );
 	}
 
 	if ( role && role !== 'ALL' ) {
 		query = query.eq( 'role', role );
 	}
 
-	query = query.order( 'full_name', { ascending: true } );
+	query = query.order( 'user_name', { ascending: true } );
 
 	const from = ( page - 1 ) * pageSize;
 	const to   = from + pageSize - 1;
@@ -50,8 +49,8 @@ export async function getUsers( params?: {
 	}
 
 	return {
-		data  : data as User[],
-		count : count || 0
+		data	: data as User[],
+		count	: count || 0
 	};
 }
 
@@ -117,18 +116,17 @@ export async function deleteUser( id: string ): Promise<void> {
 export async function getUserByEmail(
 	email: string
 ): Promise<User | null> {
+	const cleanEmail = email.trim().toLowerCase();
+
 	const { data, error } = await supabaseServer
 		.from( 'users' )
 		.select( '*' )
-		.eq( 'email', email )
-		.single();
+		.ilike( 'email', cleanEmail )
+		.limit( 1 );
 
 	if ( error ) {
-		if ( error.code === 'PGRST116' ) {
-			return null;
-		}
 		throw new Error( error.message );
 	}
 
-	return data as User;
+	return data && data.length > 0 ? ( data[ 0 ] as User ) : null;
 }
