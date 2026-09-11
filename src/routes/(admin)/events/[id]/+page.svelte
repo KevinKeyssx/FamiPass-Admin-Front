@@ -3,8 +3,7 @@
 	import { goto, invalidate } from '$app/navigation';
 	import { deserialize }      from '$app/forms';
 
-    import { Pencil, CalendarDays, Users, Search, Plus } from '@lucide/svelte';
-
+    import { Pencil, CalendarDays, Users, Plus } from '@lucide/svelte';
 
     import type {
 		EventConfig,
@@ -18,6 +17,7 @@
 	import Modal                from '$lib/components/ui/Modal.svelte';
 	import ButtonBack           from '$lib/components/ui/ButtonBack.svelte';
 	import Pagination           from '$lib/components/shared/Pagination.svelte';
+	import SearchInput          from '$lib/components/ui/SearchInput.svelte';
     import { isEventExpired }   from '$lib/utils/date.js';
 
 
@@ -48,9 +48,15 @@
 
 
 	const filteredFamilyEvents = $derived(
-		( data.event.family_events ?? [] ).filter( ( fe ) =>
-			!search.trim() || fe.family?.family_name?.toLowerCase().includes( search.toLowerCase() )
-		)
+		( data.event.family_events ?? [] ).filter( ( fe ) => {
+			if ( !search.trim() ) return true;
+
+            const term          = search.toLowerCase();
+			const familyName    = fe.family?.family_name?.toLowerCase() || '';
+			const shortCode     = fe.short_code?.toLowerCase() || '';
+
+            return familyName.includes( term ) || shortCode.includes( term );
+		})
 	);
 
 
@@ -59,11 +65,19 @@
 	}
 
 
-	function handleModalSearch(): void {
+	function handleModalSearch( query? : string ) : void {
+		const targetQuery  = query !== undefined ? query : modalSearch;
+		const currentParam = page.url.searchParams.get( 'search' ) || '';
+		const trimmedQuery = targetQuery.trim();
+
+		if ( trimmedQuery === currentParam ) {
+			return;
+		}
+
 		const url = new URL( page.url );
 
-		if ( modalSearch.trim() ) {
-			url.searchParams.set( 'search', modalSearch.trim() );
+		if ( trimmedQuery ) {
+			url.searchParams.set( 'search', trimmedQuery );
 		} else {
 			url.searchParams.delete( 'search' );
 		}
@@ -73,14 +87,7 @@
 		goto( url.pathname + url.search, {
 			keepFocus    : true,
 			replaceState : true
-		} );
-	}
-
-
-	function handleModalSearchInput( e: Event ): void {
-		const target = e.target as HTMLInputElement;
-		modalSearch = target.value;
-		handleModalSearch();
+		});
 	}
 
 
@@ -213,18 +220,10 @@
 			</div>
 
 
-			<div class="relative max-w-xs w-full">
-				<Search size={ 15 } class="absolute left-3 top-1/2 -translate-y-1/2 text-(--text-muted) pointer-events-none" />
-
-				<input
-					type="search"
+			<div class="max-w-xs w-full">
+				<SearchInput
 					bind:value={ search }
-					placeholder="Buscar familia..."
-					class="w-full pl-9 pr-4 py-2 rounded-xl border border-(--border)
-                        bg-(--bg-surface-2) text-(--text-primary)
-                        placeholder:text-(--text-muted) text-sm
-                        focus:outline-none focus:border-(--border-focus) focus:ring-2 focus:ring-(--accent)/20
-                        transition-all"
+					placeholder="Buscar familia o código..."
 				/>
 			</div>
 		</div>
@@ -234,7 +233,7 @@
 				<Users size={ 48 } class="mb-3 opacity-30" />
 
 				<p class="text-sm">
-					{ search ? 'No se encontraron familias con ese nombre.' : 'No hay familias registradas para este evento.' }
+					{ search ? 'No se encontraron familias con ese nombre o código.' : 'No hay familias registradas para este evento.' }
 				</p>
 			</div>
 		{:else}
@@ -266,20 +265,11 @@
 		<p class="text-sm text-(--text-muted)">Selecciona una familia para asociarla a este evento. No se mostrarán familias que ya estén asociadas.</p>
 
 		<!-- Buscador dentro del modal -->
-		<div class="relative">
-			<Search size={ 15 } class="absolute left-3 top-1/2 -translate-y-1/2 text-(--text-muted) pointer-events-none" />
-			<input
-				type="text"
-				placeholder="Buscar familia..."
-				value={ modalSearch }
-				oninput={ handleModalSearchInput }
-				class="w-full pl-9 pr-4 py-2 rounded-xl border border-(--border)
-				       bg-(--bg-surface-2) text-(--text-primary)
-				       placeholder:text-(--text-muted) text-sm
-				       focus:outline-none focus:border-(--border-focus) focus:ring-2 focus:ring-(--accent)/20
-				       transition-all"
-			/>
-		</div>
+		<SearchInput
+			bind:value={ modalSearch }
+			onSearch={ handleModalSearch }
+			placeholder="Buscar familia..."
+		/>
 
 		<!-- Listado de familias disponibles -->
 		<div class="max-h-60 overflow-y-auto border border-(--border) rounded-xl divide-y divide-(--border) bg-(--bg-surface-2)">
