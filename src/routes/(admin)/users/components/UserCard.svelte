@@ -4,16 +4,14 @@
 	import {
 		getRoleBadgeStyles,
 		getRoleLabel
-	}                       from '../utils/constants';
+	}                       from '../utils/constants.js';
 	import type { User }    from '$lib/types/index.js';
 	import Actions          from '$lib/components/shared/Actions.svelte';
-
 
 	interface Props {
 		users    : User[];
 		onDelete : ( user: User ) => void;
 	}
-
 
 	let {
 		users,
@@ -35,15 +33,12 @@
 					<div class="flex items-start justify-between gap-3">
 						<div class="flex items-center gap-3">
 							<div class="w-10 h-10 rounded-xl bg-accent-muted text-accent flex items-center justify-center font-bold text-base select-none shadow-xs shrink-0">
-								{ user.full_name.charAt( 0 ).toUpperCase() }
+								{ ( user.user_name || user.email || 'U' ).charAt( 0 ).toUpperCase() }
 							</div>
 							<div class="truncate">
-								<h3 class="font-bold text-base text-text-primary truncate max-w-44" title={ user.full_name }>
-									{ user.full_name }
+								<h3 class="font-bold text-base text-text-primary truncate max-w-44" title={ user.user_name || user.email }>
+									{ user.user_name || user.email }
 								</h3>
-								{#if user.user_name}
-									<p class="text-xs text-text-secondary mt-0.5">@{ user.user_name }</p>
-								{/if}
 							</div>
 						</div>
 
