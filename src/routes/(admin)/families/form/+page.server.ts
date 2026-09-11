@@ -5,13 +5,12 @@ import { getFamilyById, createFamily, updateFamily }    from '$lib/server/supaba
 import { createFamilyMember }                           from '$lib/server/supabase/services/familyMembers.service.js';
 import type { Family, FamilyMember }                    from '$lib/types/index.js';
 
-
 export const load: PageServerLoad = async ( event ) => {
 	const id = event.url.searchParams.get( 'id' );
 
 	let family: Family | null = null;
 
-    if ( id ) {
+	if ( id ) {
 		try {
 			family = await getFamilyById( id );
 		} catch ( err: any ) {
@@ -45,8 +44,8 @@ export const actions: Actions = {
 			} else {
 				const code = Math.floor( Math.random() * 99999 ) + 1;
 				const familyData: Omit<Family, 'id' | 'created_at' | 'updated_at' | 'members_count'> = {
-					family_name	: familyName.trim(),
-					code		: code
+					family_name : familyName.trim(),
+					code        : code
 				};
 				const newFamily = await createFamily( familyData );
 
@@ -58,9 +57,11 @@ export const actions: Actions = {
 							family_id         : newFamily.id,
 							full_name         : member.full_name,
 							rut               : member.rut,
+							email             : member.email || null,
 							phone             : member.phone || null,
 							organization      : member.organization,
-							is_representative : member.is_representative
+							is_representative : member.is_representative,
+							role              : member.role || ( member.is_representative ? 'ADMIN' : 'VIEWER' )
 						} );
 					}
 				}
