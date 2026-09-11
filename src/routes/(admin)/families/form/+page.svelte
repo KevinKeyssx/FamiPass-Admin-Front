@@ -6,17 +6,21 @@
 	import { Users, Plus, Trash2, Crown, User as UserIcon } from '@lucide/svelte';
 
 	import type {
-        Family,
-        FamilyMember,
-        CommunityOrganization
-    }                           from '$lib/types/index.js';
-	import Button               from '$lib/components/ui/Button.svelte';
-	import InputText            from '$lib/components/ui/InputText.svelte';
-	import FamilyMemberForm     from '../components/FamilyMemberForm.svelte';
-	import Modal                from '$lib/components/ui/Modal.svelte';
-	import { getOrgLabel }      from '../utils/constants.js';
-	import ButtonBack           from '$lib/components/ui/ButtonBack.svelte';
-
+		Family,
+		FamilyMember,
+		CommunityOrganization,
+		FamilyMemberRole
+	}                                   from '$lib/types/index.js';
+	import Button                       from '$lib/components/ui/Button.svelte';
+	import InputText                    from '$lib/components/ui/InputText.svelte';
+	import FamilyMemberForm             from '../components/FamilyMemberForm.svelte';
+	import Modal                        from '$lib/components/ui/Modal.svelte';
+	import {
+		getOrgLabel,
+		getFamilyRoleLabel,
+		getFamilyRoleBadgeStyles
+	}                                   from '../utils/constants.js';
+	import ButtonBack                   from '$lib/components/ui/ButtonBack.svelte';
 
 	interface Props {
 		data: {
@@ -24,21 +28,16 @@
 		};
 	}
 
-
 	interface FormState {
 		family_name : string;
 	}
 
-
 	type LocalMember = Omit<FamilyMember, 'id' | 'family_id' | 'created_at' | 'updated_at' | 'family'>;
-
 
 	let { data }: Props = $props();
 
-
 	const id     = $derived( page.url.searchParams.get( 'id' ) );
 	const isEdit = $derived( !!id );
-
 
 	let errorMsg        = $state<string | null>( null );
 	let isSaving        = $state( false );
@@ -54,13 +53,14 @@
 		family_name : data.family?.family_name ?? ''
 	} );
 
-
 	function handleAddMember( data: {
 		full_name         : string;
 		rut               : string;
+		email             : string;
 		phone             : string;
 		organization      : CommunityOrganization;
 		is_representative : boolean;
+		role              : FamilyMemberRole;
 	} ): void {
 		members = [ ...members, data ];
 		showMemberModal = false;
@@ -200,6 +200,7 @@
 									<th class="px-4 py-3 font-semibold text-text-secondary">Nombre</th>
 									<th class="px-4 py-3 font-semibold text-text-secondary">RUT</th>
 									<th class="px-4 py-3 font-semibold text-text-secondary">Organización</th>
+									<th class="px-4 py-3 font-semibold text-text-secondary">Rol</th>
 									<th class="px-4 py-3 font-semibold text-text-secondary text-center">Representante</th>
 									<th class="px-4 py-3 font-semibold text-text-secondary text-right">Acciones</th>
 								</tr>
@@ -217,6 +218,11 @@
 										</td>
 										<td class="px-4 py-3 text-text-secondary font-mono">{ m.rut }</td>
 										<td class="px-4 py-3 text-text-secondary">{ getOrgLabel( m.organization ) }</td>
+										<td class="px-4 py-3 text-text-secondary">
+											<span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold border { getFamilyRoleBadgeStyles( m.role ) }">
+												{ getFamilyRoleLabel( m.role ) }
+											</span>
+										</td>
 										<td class="px-4 py-3 text-center">
 											{#if m.is_representative}
 												<span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-accent-muted text-accent">Sí</span>
