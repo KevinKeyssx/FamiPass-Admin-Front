@@ -4,16 +4,14 @@
 	import {
 		getRoleBadgeStyles,
 		getRoleLabel
-	}                       from '../utils/constants';
+	}                       from '../utils/constants.js';
 	import type { User }    from '$lib/types/index.js';
 	import Actions          from '$lib/components/shared/Actions.svelte';
-
 
 	interface Props {
 		users    : User[];
 		onDelete : ( user: User ) => void;
 	}
-
 
 	let {
 		users,
@@ -32,7 +30,7 @@
 			<table class="w-full text-sm">
 				<thead>
 					<tr class="border-b border-border bg-bg-surface-2 select-none">
-						<th class="text-left px-6 py-4 font-semibold text-text-secondary">Nombre / Usuario</th>
+						<th class="text-left px-6 py-4 font-semibold text-text-secondary">Usuario</th>
 						<th class="text-left px-6 py-4 font-semibold text-text-secondary hidden sm:table-cell">Email</th>
 						<th class="text-left px-6 py-4 font-semibold text-text-secondary hidden md:table-cell">Teléfono</th>
 						<th class="text-left px-6 py-4 font-semibold text-text-secondary">Rol</th>
@@ -45,12 +43,12 @@
 							<td class="px-6 py-4">
 								<div class="flex items-center gap-3">
 									<div class="w-9 h-9 rounded-xl bg-accent-muted text-accent flex items-center justify-center font-bold text-sm select-none shadow-xs">
-										{ user.full_name.charAt( 0 ).toUpperCase() }
+										{ ( user.user_name || user.email || 'U' ).charAt( 0 ).toUpperCase() }
 									</div>
 									<div class="truncate">
 										<div class="flex items-center gap-1.5">
-											<p class="font-semibold text-text-primary truncate max-w-48" title={ user.full_name }>
-												{ user.full_name }
+											<p class="font-semibold text-text-primary truncate max-w-48" title={ user.user_name || user.email }>
+												{ user.user_name || user.email }
 											</p>
 
 											{#if !user.is_active}
@@ -59,9 +57,6 @@
 												</span>
 											{/if}
 										</div>
-										{#if user.user_name}
-											<p class="text-xs text-text-secondary mt-0.5">@{ user.user_name }</p>
-										{/if}
 									</div>
 								</div>
 							</td>
