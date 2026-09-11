@@ -2,7 +2,6 @@ import { supabaseServer } from '../supabase.js';
 
 import type { FamilyMember } from '$lib/types/index.js';
 
-
 export async function getFamilyMembers( familyId: string ): Promise<FamilyMember[]> {
 	const { data, error } = await supabaseServer
 		.from( 'family_members' )
@@ -31,12 +30,33 @@ export async function getFamilyMemberById( id: string ): Promise<FamilyMember> {
 	return data as FamilyMember;
 }
 
+export async function getMemberByRut( rut: string ): Promise<FamilyMember | null> {
+	const cleanRut = rut.trim().toLowerCase();
+
+	const { data, error } = await supabaseServer
+		.from( 'family_members' )
+		.select( '*, family:families(*)' )
+		.ilike( 'rut', cleanRut )
+		.limit( 1 );
+
+	if ( error ) {
+		throw new Error( error.message );
+	}
+
+	return data && data.length > 0 ? ( data[ 0 ] as FamilyMember ) : null;
+}
+
 export async function createFamilyMember(
 	member: Omit<FamilyMember, 'id' | 'created_at' | 'updated_at' | 'family'>
 ): Promise<FamilyMember> {
+	const memberData = {
+		...member,
+		role : member.role || ( member.is_representative ? ( 'ADMIN' as const ) : ( 'VIEWER' as const ) )
+	};
+
 	const { data, error } = await supabaseServer
 		.from( 'family_members' )
-		.insert( [ member ] )
+		.insert( [ memberData ] )
 		.select()
 		.single();
 
