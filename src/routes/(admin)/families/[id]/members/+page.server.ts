@@ -1,14 +1,18 @@
 import { fail } from '@sveltejs/kit';
 
-import type { PageServerLoad, Actions } from './$types.js';
-import { getFamilyById }                  from '$lib/server/supabase/services/families.service.js';
 import {
-	getFamilyMembers,
+    getFamilyMembers,
 	createFamilyMember,
 	updateFamilyMember,
 	deleteFamilyMember
-}                                         from '$lib/server/supabase/services/familyMembers.service.js';
-import type { FamilyMember, CommunityOrganization } from '$lib/types/index.js';
+}                                       from '$lib/server/supabase/services/familyMembers.service.js';
+import type {
+    FamilyMember,
+	CommunityOrganization,
+	FamilyMemberRole
+}                                       from '$lib/types/index.js';
+import { getFamilyById }                from '$lib/server/supabase/services/families.service.js';
+import type { PageServerLoad, Actions } from './$types.js';
 
 
 export const load: PageServerLoad = async ( { params, depends } ) => {
@@ -38,9 +42,11 @@ export const actions: Actions = {
 
 		const fullName         = formData.get( 'full_name' ) as string;
 		const rut              = formData.get( 'rut' ) as string;
+		const email            = formData.get( 'email' ) as string;
 		const phone            = formData.get( 'phone' ) as string;
 		const organization     = formData.get( 'organization' ) as CommunityOrganization;
 		const isRepresentative = formData.get( 'is_representative' ) === 'true';
+		const role             = ( formData.get( 'role' ) as FamilyMemberRole ) || ( isRepresentative ? 'ADMIN' : 'VIEWER' );
 
 		if ( !fullName || !fullName.trim() ) {
 			return fail( 400, { error: 'El nombre completo es requerido.' } );
@@ -55,9 +61,11 @@ export const actions: Actions = {
 				const memberData: Partial<Omit<FamilyMember, 'id' | 'family_id' | 'created_at' | 'updated_at' | 'family'>> = {
 					full_name         : fullName.trim(),
 					rut               : rut.trim(),
-					phone             : phone.trim() || null,
+					email             : email ? email.trim() : null,
+					phone             : phone ? phone.trim() : null,
 					organization      : organization,
-					is_representative : isRepresentative
+					is_representative : isRepresentative,
+					role              : isRepresentative ? 'ADMIN' : role
 				};
 				await updateFamilyMember( memberId, memberData );
 			} else {
@@ -65,9 +73,11 @@ export const actions: Actions = {
 					family_id         : params.id,
 					full_name         : fullName.trim(),
 					rut               : rut.trim(),
-					phone             : phone.trim() || null,
+					email             : email ? email.trim() : null,
+					phone             : phone ? phone.trim() : null,
 					organization      : organization,
-					is_representative : isRepresentative
+					is_representative : isRepresentative,
+					role              : isRepresentative ? 'ADMIN' : role
 				};
 				await createFamilyMember( memberData );
 			}
