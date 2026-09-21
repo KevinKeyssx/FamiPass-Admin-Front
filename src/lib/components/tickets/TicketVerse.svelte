@@ -1,42 +1,54 @@
 <script lang="ts">
 	import { onMount, onDestroy } from 'svelte';
-	import QRCodeStyling          from 'qr-code-styling';
-	import { theme }              from '$lib/stores/theme.svelte.js';
-	import type { FamilyEvent, Order } from '$lib/types/index.js';
-	import { Crown, User as UserIcon, Users, ShoppingBasket, Trash2 } from '@lucide/svelte';
-	import Modal                  from '$lib/components/ui/Modal.svelte';
-	import { deserialize }        from '$app/forms';
-	import { invalidate }         from '$app/navigation';
+
+	import {
+        Crown,
+        User as UserIcon,
+        Users,
+        ShoppingBasket,
+        Trash2
+    }                       from '@lucide/svelte';
+    import QRCodeStyling    from 'qr-code-styling';
+
+    import type { FamilyEvent, Order }  from '$lib/types/index.js';
+	import { theme }                    from '$lib/stores/theme.svelte.js';
+	import Modal                        from '$lib/components/ui/Modal.svelte';
+	import { deserialize }              from '$app/forms';
+	import { invalidate }               from '$app/navigation';
+	import { PUBLIC_STAFF_URL }         from '$env/static/public';
 
 
 	interface Props {
 		familyEvent : FamilyEvent & { orders?: Order[] };
 		order?      : Order | null;
-		staffUrl    : string;
 		isExpired?  : boolean;
 	}
 
 
-	let { familyEvent, order = null, staffUrl, isExpired = false }: Props = $props();
+	let {
+        familyEvent,
+        order = null,
+        isExpired = false
+    }: Props = $props();
 
 
-	let qrContainer     = $state<HTMLDivElement | null>( null );
 	let qrInstance      : QRCodeStyling | null = null;
+
+
+    let qrContainer     = $state<HTMLDivElement | null>( null );
 	let deleteModalOpen = $state( false );
 	let isDeleting      = $state( false );
 	let deleteError     = $state<string | null>( null );
 
-	const ordersTaken = $derived( familyEvent.orders?.length ?? 0 );
-	const maxOrders   = $derived( familyEvent.family?.members?.length ?? 0 );
 
-	const qrUrl = $derived(
+    const ordersTaken   = $derived( familyEvent.orders?.length ?? 0 );
+	const maxOrders     = $derived( familyEvent.family?.members?.length ?? 0 );
+    const accentColor   = $derived( theme.isDark ? '#a5b4fc' : '#7c3aed' );
+	const qrUrl         = $derived(
 		familyEvent.qr_code_hash
-			? `${ staffUrl }/scan/${ familyEvent.qr_code_hash }`
+			? `${ PUBLIC_STAFF_URL }/scan/${ familyEvent.qr_code_hash }`
 			: null
 	);
-
-	const accentColor = $derived( theme.isDark ? '#a5b4fc' : '#7c3aed' );
-
 	const statusColor = $derived(
 		order
 			? order.status === 'COMPLETED'
@@ -81,19 +93,22 @@
 		if ( order?.family_members && order.family_members.length > 0 ) {
 			return order.family_members;
 		}
-		return familyEvent.family?.members?.map( ( m ) => ( {
-			rut              : m.rut,
-			full_name        : m.full_name,
-			organization     : m.organization,
-			is_representative: m.is_representative,
-		} ) ) ?? [];
+
+        return familyEvent.family?.members?.map( ( m ) => ({
+			rut               : m.rut,
+			full_name         : m.full_name,
+			organization      : m.organization,
+			is_representative : m.is_representative,
+		}) ) ?? [];
 	} );
 
-	const representativeName = $derived(
+
+    const representativeName = $derived(
 		members().find( ( m ) => m.is_representative )?.full_name || 'No asignado'
 	);
 
-	function formatDate( d: string ): string {
+
+    function formatDate( d: string ): string {
 		if ( !d ) return '—';
 		return new Date( d ).toLocaleDateString( 'es-CL', {
 			day   : 'numeric',
@@ -102,7 +117,8 @@
 		} );
 	}
 
-	function buildQR(): void {
+
+    function buildQR(): void {
 		if ( !qrUrl || !qrContainer ) return;
 
 		qrContainer.innerHTML = '';
@@ -123,17 +139,18 @@
 		qrInstance.append( qrContainer );
 	}
 
-	onMount( () => {
+
+    onMount( () => {
 		buildQR();
 	} );
 
-	onDestroy( () => {
+
+    onDestroy( () => {
 		qrInstance = null;
 	} );
 
-	$effect( () => {
-		const _dep1 = accentColor;
-		const _dep2 = qrUrl;
+
+    $effect( () => {
 		buildQR();
 	} );
 </script>
