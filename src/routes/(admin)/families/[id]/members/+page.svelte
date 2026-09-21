@@ -3,6 +3,8 @@
 	import { invalidate }   from '$app/navigation';
 	import { page }         from '$app/state';
 
+    import { UserPlus }     from '@lucide/svelte';
+
 	import type {
 		Family,
 		FamilyMember,
@@ -11,15 +13,17 @@
 	}                           from '$lib/types/index.js';
 	import ViewSwitcher         from '$lib/components/shared/ViewSwitcher.svelte';
 	import Modal                from '$lib/components/ui/Modal.svelte';
+	import Drawer               from '$lib/components/ui/Drawer.svelte';
 	import FamilyMemberForm     from '../../components/FamilyMemberForm.svelte';
 	import FamilyMemberTable    from './components/FamilyMemberTable.svelte';
 	import FamilyMemberCard     from './components/FamilyMemberCard.svelte';
+	import AddMemberDrawerForm  from './components/AddMemberDrawerForm.svelte';
 	import ButtonBack           from '$lib/components/ui/ButtonBack.svelte';
 	import ButtonCreate         from '$lib/components/ui/ButtonCreate.svelte';
 
 
 	interface Props {
-		data: {
+		data : {
 			family  : Family | null;
 			members : FamilyMember[];
 		};
@@ -32,9 +36,11 @@
 	const currentView  = $derived( page.url.searchParams.get( 'view' ) || 'card' );
 
 	let showFormModal  = $state( false );
+	let isDrawerOpen   = $state( false );
 	let isSaving       = $state( false );
 	let isDeleting     = $state( false );
 	let saveError      = $state<string | null>( null );
+	let drawerError    = $state<string | null>( null );
 	let deleteError    = $state<string | null>( null );
 
 	let selectedMember = $state<FamilyMember | null>( null );
@@ -52,35 +58,38 @@
 	function scrollToForm(): void {
 		const input = document.getElementById( 'member-full-name' ) || document.querySelector( 'input[placeholder="Ej: Juan Pérez"]' );
 
-        if ( input ) {
+		if ( input ) {
 			input.scrollIntoView( { behavior : 'smooth', block : 'center' } );
 			( input as HTMLInputElement ).focus();
 		}
 	}
 
-	function openEditModal( member: FamilyMember ): void {
+	function openEditModal( member : FamilyMember ): void {
 		saveError = null;
 		selectedMember = member;
 		showFormModal = true;
 	}
 
-	async function handleSaveMember( memberData: {
+	async function handleSaveMember( memberData : {
 		full_name         : string;
-		rut               : string;
-		email             : string;
+		rut?              : string;
+		email?            : string;
 		phone             : string;
 		organization      : CommunityOrganization;
 		is_representative : boolean;
 		role              : FamilyMemberRole;
-	}): Promise<boolean> {
-		saveError = null;
-		isSaving = true;
+	} ): Promise<boolean> {
+		saveError   = null;
+		drawerError = null;
+		isSaving    = true;
 
 		const formData = new FormData();
 		formData.append( 'full_name', memberData.full_name );
-		formData.append( 'rut', memberData.rut );
-		formData.append( 'email', memberData.email );
-		formData.append( 'phone', memberData.phone );
+		if ( memberData.rut ) {
+			formData.append( 'rut', memberData.rut );
+		}
+		formData.append( 'email', memberData.email || '' );
+		formData.append( 'phone', memberData.phone || '' );
 		formData.append( 'organization', memberData.organization );
 		formData.append( 'is_representative', String( memberData.is_representative ) );
 		formData.append( 'role', memberData.role );
@@ -98,25 +107,30 @@
 			if ( result.type === 'success' ) {
 				await invalidate( 'app:family-members' );
 
-				showFormModal = false;
+				showFormModal  = false;
 				selectedMember = null;
+				isDrawerOpen   = false;
 				return true;
 			} else if ( result.type === 'failure' ) {
-				saveError = ( result.data as any )?.error ?? 'Error al guardar el miembro.';
+				const errMsg = ( result.data as any )?.error ?? 'Error al guardar el miembro.';
+				saveError   = errMsg;
+				drawerError = errMsg;
 				return false;
 			} else {
-				saveError = 'Ocurrió un error inesperado.';
+				saveError   = 'Ocurrió un error inesperado.';
+				drawerError = 'Ocurrió un error inesperado.';
 				return false;
 			}
-		} catch ( err: any ) {
-			saveError = err.message;
+		} catch ( err : any ) {
+			saveError   = err.message;
+			drawerError = err.message;
 			return false;
 		} finally {
 			isSaving = false;
 		}
 	}
 
-	function openDeleteModal( member: FamilyMember ): void {
+	function openDeleteModal( member : FamilyMember ): void {
 		deleteError = null;
 		deleteModal = {
 			open : true,
@@ -128,7 +142,7 @@
 	async function confirmDelete(): Promise<void> {
 		if ( !deleteModal.id ) return;
 
-		isDeleting = true;
+		isDeleting  = true;
 		deleteError = null;
 
 		const formData = new FormData();
@@ -155,7 +169,7 @@
 			} else {
 				deleteError = 'Ocurrió un error inesperado.';
 			}
-		} catch ( err: any ) {
+		} catch ( err : any ) {
 			deleteError = err.message;
 		} finally {
 			isDeleting = false;
@@ -188,7 +202,21 @@
 		<div class="flex items-center justify-between sm:justify-end gap-2.5 relative z-10 shrink-0 w-full sm:w-auto">
 			<ViewSwitcher />
 
-			<ButtonCreate onclick={ scrollToForm } label="Miembro" prefix="Agregar" />
+			<!-- En móvil (< md) abre el Drawer, en escritorio (>= md) hace scroll a la tabla -->
+			<div class="lg:hidden">
+				<ButtonCreate
+					onclick={ () => { drawerError = null; isDrawerOpen = true; } }
+					label="Miembro"
+					prefix="Agregar"
+				/>
+			</div>
+			<div class="hidden lg:block">
+				<ButtonCreate
+					onclick={ scrollToForm }
+					label="Miembro"
+					prefix="Agregar"
+				/>
+			</div>
 		</div>
 	</div>
 
@@ -213,6 +241,34 @@
 		/>
 	{/if}
 </div>
+
+<!-- Botón flotante para móvil (hasta md) -->
+<div class="fixed bottom-20 right-4 sm:bottom-22 sm:right-6 z-40 lg:hidden">
+	<button
+		type="button"
+		onclick={ () => { drawerError = null; isDrawerOpen = true; } }
+		class="flex items-center gap-2 px-3.5 sm:px-5 py-3.5 rounded-full bg-accent text-accent-text font-bold text-sm shadow-xl hover:shadow-2xl active:scale-95 transition-all duration-200 cursor-pointer"
+		aria-label="Agregar Miembro"
+	>
+		<UserPlus size={ 22 } />
+		<span class="hidden sm:flex">Agregar Miembro</span>
+	</button>
+</div>
+
+<!-- Drawer para agregar miembro en móvil (hasta md) -->
+<Drawer
+	open={ isDrawerOpen }
+	onClose={ () => { isDrawerOpen = false; drawerError = null; } }
+	title="Agregar Nuevo Miembro"
+	description="Ingresa los datos del nuevo integrante familiar"
+>
+	<AddMemberDrawerForm
+		onSubmit={ handleSaveMember }
+		onCancel={ () => { isDrawerOpen = false; drawerError = null; } }
+		loading={ isSaving }
+		error={ drawerError }
+	/>
+</Drawer>
 
 <!-- Modal para Editar Miembro -->
 <Modal
