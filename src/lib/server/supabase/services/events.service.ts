@@ -66,11 +66,15 @@ export async function getEvents( params?: {
 }
 
 
-export async function getEventById( id: string ): Promise<any | null> {
+export async function getEventById( id: string ): Promise<EventConfig | null> {
 	const { data, error } = await supabaseServer
 		.from( 'events' )
 		.select( `
 			*,
+			event_products (
+				*,
+				product:products ( * )
+			),
 			family_events (
 				*,
 				family:families ( *, members:family_members ( * ) ),
@@ -90,7 +94,41 @@ export async function getEventById( id: string ): Promise<any | null> {
 		throw new Error( error.message );
 	}
 
-	return data;
+	return data as EventConfig;
+}
+
+
+export async function syncEventProducts(
+	eventId : string,
+	items   : Array<{ product_id: string; quantity: number }>
+): Promise<void> {
+	const { error: deleteError } = await supabaseServer
+		.from( 'event_products' )
+		.delete()
+		.eq( 'event_id', eventId );
+
+	if ( deleteError ) {
+		throw new Error( deleteError.message );
+	}
+
+	if ( items.length === 0 ) {
+		return;
+	}
+
+	const toInsert = items.map( ( item ) => ({
+		event_id   : eventId,
+		product_id : item.product_id,
+		quantity   : item.quantity,
+		status     : 'AVAILABLE'
+	}) );
+
+	const { error: insertError } = await supabaseServer
+		.from( 'event_products' )
+		.insert( toInsert );
+
+	if ( insertError ) {
+		throw new Error( insertError.message );
+	}
 }
 
 
@@ -154,6 +192,11 @@ export async function deleteEvent( id: string ): Promise<void> {
 	if ( event.status !== 'DRAFT' ) {
 		throw new Error( `Cannot delete an event with status "${ event.status }". Only DRAFT events can be deleted.` );
 	}
+
+	await supabaseServer
+		.from( 'event_products' )
+		.delete()
+		.eq( 'event_id', id );
 
 	const { error } = await supabaseServer
 		.from( 'events' )
