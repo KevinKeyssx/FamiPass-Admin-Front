@@ -1,14 +1,15 @@
 <script lang="ts">
 	import { page } from '$app/state';
-	import { LogOut, LayoutDashboard, CalendarDays, Package, Users } from '@lucide/svelte';
+
+    import { LogOut, LayoutDashboard, CalendarDays, Package, Users } from '@lucide/svelte';
 
 	import ToggleTheme from './ToggleTheme.svelte';
 
 	interface Props {
-		sidebarOpen   : boolean;
-		toggleSidebar : () => void;
-		handleLogout  : () => Promise<void>;
-		data          : {
+		sidebarOpen?   : boolean;
+		closeSidebar?  : () => void;
+		handleLogout   : () => Promise<void>;
+		data           : {
 			user : {
 				name?  : string | null;
 				email? : string | null;
@@ -16,14 +17,19 @@
 		} | null;
 	}
 
-	let { sidebarOpen, toggleSidebar, handleLogout, data } : Props = $props();
+	let {
+		sidebarOpen   = $bindable( false ),
+		closeSidebar  = () => {},
+		handleLogout,
+		data
+	} : Props = $props();
 
 	const navItems = [
-		{ href: '/dashboard', label: 'Dashboard', Icon: LayoutDashboard },
-		{ href: '/events',    label: 'Eventos',   Icon: CalendarDays },
-		{ href: '/products',  label: 'Productos', Icon: Package },
-		{ href: '/users',     label: 'Usuarios',  Icon: Users },
-		{ href: '/families',  label: 'Familias',  Icon: Users }
+		{ href : '/dashboard', label : 'Dashboard', Icon : LayoutDashboard },
+		{ href : '/events',    label : 'Eventos',   Icon : CalendarDays },
+		{ href : '/products',  label : 'Productos', Icon : Package },
+		{ href : '/users',     label : 'Usuarios',  Icon : Users },
+		{ href : '/families',  label : 'Familias',  Icon : Users }
 	];
 
 	const currentPath = $derived( page.url.pathname );
@@ -36,8 +42,8 @@
 		role        = "button"
 		tabindex    = "-1"
 		aria-label  = "Cerrar menú"
-		onclick     = { toggleSidebar }
-		onkeydown   = { ( e ) => e.key === 'Enter' && toggleSidebar() }
+		onclick     = { () => { sidebarOpen = false; closeSidebar(); } }
+		onkeydown   = { ( e ) => e.key === 'Enter' && ( sidebarOpen = false, closeSidebar() ) }
 	></div>
 {/if}
 
@@ -49,7 +55,11 @@
         {sidebarOpen ? 'translate-x-0' : '-translate-x-full'} lg:translate-x-0 lg:static lg:z-auto"
 >
 	<!-- Logo -->
-	<div class="flex items-center gap-3 px-6 py-5 border-b border-(--border) group/logo select-none">
+	<a
+		href="/dashboard"
+		onclick={ () => { sidebarOpen = false; closeSidebar(); } }
+		class="flex items-center gap-3 px-6 py-5 border-b border-(--border) group/logo select-none cursor-pointer"
+	>
 		<img
 			src="/logo/logo_small.avif"
 			alt="Logo FamiPass"
@@ -60,7 +70,7 @@
 			<p class="font-bold text-(--text-primary) leading-tight transition-colors group-hover/logo:text-(--accent)">FamiPass</p>
 			<p class="text-xs text-(--text-muted)">Admin Panel</p>
 		</div>
-	</div>
+	</a>
 
 	<!-- Nav -->
 	<nav class="flex-1 px-3 py-4 space-y-1.5 overflow-y-auto">
@@ -74,7 +84,7 @@
                     {isActive
                         ? 'bg-(--accent-muted) text-(--accent) border-l-(--accent) shadow-sm'
                         : 'text-(--text-secondary) hover:bg-(--bg-surface-2) hover:text-(--text-primary) hover:translate-x-1.5 hover:border-l-(--accent)'}"
-				onclick={ () => { sidebarOpen = false; } }
+				onclick={ () => { sidebarOpen = false; closeSidebar(); } }
 			>
 				<Icon
 					size={ 18 }
