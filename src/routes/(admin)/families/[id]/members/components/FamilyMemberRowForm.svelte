@@ -1,6 +1,5 @@
 <script lang="ts">
 	import {
-		validateRut,
 		validatePhone,
 		formatPhone
 	}                            from '$lib/utils/validation.js';
@@ -18,25 +17,27 @@
 	import { Check, X, Plus }   from '@lucide/svelte';
 
 	interface Props {
-		onSubmit: ( data: {
+		onSubmit : ( data : {
 			full_name         : string;
-			rut               : string;
-			email             : string;
+			rut?              : string;
+			email?            : string;
 			phone             : string;
 			organization      : CommunityOrganization;
 			is_representative : boolean;
 			role              : FamilyMemberRole;
 		} ) => Promise<boolean>;
 		isSaving? : boolean;
+		class?    : string;
 	}
 
 	let {
 		onSubmit,
-		isSaving = false
+		isSaving          = false,
+		class : extraClass = ''
 	}: Props = $props();
 
 	let full_name         = $state( '' );
-	let rut               = $state( '' );
+	// let rut               = $state( '' );
 	let email             = $state( '' );
 	let phone             = $state( '' );
 	let organization      = $state<CommunityOrganization>( 'NINGUNA' );
@@ -51,17 +52,17 @@
 
 	let errors = $state<Record<string, string | null>>( {
 		full_name : null,
-		rut       : null,
+		// rut       : null,
 		email     : null,
 		phone     : null
 	} );
 
-	async function handleSubmit( e: SubmitEvent ): Promise<void> {
+	async function handleSubmit( e : SubmitEvent ): Promise<void> {
 		e.preventDefault();
 
 		errors = {
 			full_name : null,
-			rut       : null,
+			// rut       : null,
 			email     : null,
 			phone     : null
 		};
@@ -73,15 +74,16 @@
 			hasError = true;
 		}
 
-		if ( !rut.trim() ) {
-			errors.rut = 'El RUT es requerido.';
-			hasError = true;
-		} else if ( !validateRut( rut ) ) {
-			errors.rut = 'El RUT ingresado no es válido.';
-			hasError = true;
-		}
+		// Validación de RUT comentada (RUT opcional)
+		// if ( !rut.trim() ) {
+		// 	errors.rut = 'El RUT es requerido.';
+		// 	hasError = true;
+		// } else if ( !validateRut( rut ) ) {
+		// 	errors.rut = 'El RUT ingresado no es válido.';
+		// 	hasError = true;
+		// }
 
-		if ( email.trim() && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test( email.trim() ) ) {
+		if ( email.trim() && !/^[^s@]+@[^s@]+.[^s@]+$/.test( email.trim() ) ) {
 			errors.email = 'Correo no válido.';
 			hasError = true;
 		}
@@ -95,7 +97,7 @@
 
 		const success = await onSubmit( {
 			full_name         : full_name.trim(),
-			rut               : rut.trim(),
+			// rut               : rut.trim(),
 			email             : email.trim(),
 			phone             : phone.trim() ? formatPhone( phone ) : '',
 			organization      : organization,
@@ -110,7 +112,7 @@
 
 	function handleClear(): void {
 		full_name         = '';
-		rut               = '';
+		// rut               = '';
 		email             = '';
 		phone             = '';
 		organization      = 'NINGUNA';
@@ -118,14 +120,14 @@
 		role              = 'VIEWER';
 		errors            = {
 			full_name : null,
-			rut       : null,
+			// rut       : null,
 			email     : null,
 			phone     : null
 		};
 	}
 </script>
 
-<tr class="bg-bg-surface-2/20 hover:bg-bg-surface-2/40 transition-colors">
+<tr class="bg-bg-surface-2/20 hover:bg-bg-surface-2/40 transition-colors { extraClass }">
 	<td class="px-4 py-3 text-text-primary font-semibold">
 		<InputText
 			placeholder="Ej: Juan Pérez"
@@ -135,14 +137,15 @@
 		/>
 	</td>
 
-	<td class="px-4 py-3 text-text-secondary font-mono">
+	<!-- RUT comentado: ya no se solicita -->
+	<!-- <td class="px-4 py-3 text-text-secondary font-mono">
 		<InputText
 			placeholder="Ej: 12.345.678-9"
 			bind:value={ rut }
 			error={ errors.rut }
 			disabled={ isSaving }
 		/>
-	</td>
+	</td> -->
 
 	<td class="px-4 py-3 text-text-secondary">
 		<div class="space-y-1.5">
@@ -184,7 +187,7 @@
 				bind:checked={ is_representative }
 				disabled={ isSaving }
 				id="member-is-representative-inline"
-				class="w-5 h-5 rounded-lg border flex items-center justify-center transition-all duration-200 cursor-pointer
+				class="w-5 h-5 min-w-5 min-h-5 shrink-0 aspect-square rounded-md border flex items-center justify-center transition-all duration-200 cursor-pointer
                     { is_representative
                         ? 'bg-accent border-accent text-accent-text'
                         : 'bg-bg-surface border-border hover:border-accent/40' }"
@@ -214,7 +217,7 @@
 
 			<button
 				type="button"
-				onclick={ ( e: MouseEvent ) => {
+				onclick={ ( e : MouseEvent ) => {
 					const form = ( e.target as HTMLElement ).closest( 'tr' )?.querySelector( 'form' );
 					if ( form ) form.requestSubmit();
 				} }

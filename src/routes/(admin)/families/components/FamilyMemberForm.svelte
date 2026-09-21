@@ -7,7 +7,6 @@
 		FamilyMemberRole
 	}                               from '$lib/types/index.js';
 	import {
-		validateRut,
 		validatePhone,
 		formatPhone
 	}                               from '$lib/utils/validation.js';
@@ -21,49 +20,49 @@
 	import Button                   from '$lib/components/ui/Button.svelte';
 
 
-    const roleDescriptions: Record<FamilyMemberRole, { desc: string; icon: any }> = {
-		VIEWER: {
-			desc: 'Solo puede visualizar los miembros del grupo familiar y sus tickets asignados.',
-			icon: Eye
+	const roleDescriptions : Record<FamilyMemberRole, { desc : string; icon : any }> = {
+		VIEWER : {
+			desc : 'Solo puede visualizar los miembros del grupo familiar y sus tickets asignados.',
+			icon : Eye
 		},
-		AGGREGATOR: {
-			desc: 'Puede inscribir y agregar nuevos integrantes a la familia, sin permisos para editar o eliminar existentes.',
-			icon: UserPlus
+		AGGREGATOR : {
+			desc : 'Puede inscribir y agregar nuevos integrantes a la familia, sin permisos para editar o eliminar existentes.',
+			icon : UserPlus
 		},
-		ADMIN: {
-			desc: 'Control total: puede agregar, editar datos y eliminar cualquier integrante de la familia.',
-			icon: Shield
+		ADMIN : {
+			desc : 'Control total: puede agregar, editar datos y eliminar cualquier integrante de la familia.',
+			icon : Shield
 		}
 	};
 
 
-    interface Props {
+	interface Props {
 		member?      : FamilyMember | null;
-		onSubmit     : ( data: {
+		onSubmit     : ( data : {
 			full_name         : string;
-			rut               : string;
-			email             : string;
+			rut?              : string;
+			email?            : string;
 			phone             : string;
 			organization      : CommunityOrganization;
 			is_representative : boolean;
 			role              : FamilyMemberRole;
-		}) => void;
+		} ) => void;
 		onCancel?    : () => void;
 		submitLabel? : string;
 	}
 
 
-    let {
-		member = null,
+	let {
+		member      = null,
 		onSubmit,
-		onCancel = () => {},
+		onCancel    = () => {},
 		submitLabel = 'Guardar'
 	}: Props = $props();
 
 	// svelte-ignore state_referenced_locally
 	let full_name         = $state( member?.full_name ?? '' );
 	// svelte-ignore state_referenced_locally
-	let rut               = $state( member?.rut ?? '' );
+	// let rut               = $state( member?.rut ?? '' );
 	// svelte-ignore state_referenced_locally
 	let email             = $state( member?.email ?? '' );
 	// svelte-ignore state_referenced_locally
@@ -83,17 +82,17 @@
 
 	let errors = $state<Record<string, string | null>>( {
 		full_name : null,
-		rut       : null,
+		// rut       : null,
 		email     : null,
 		phone     : null
 	} );
 
-	function handleFormSubmit( e: SubmitEvent ): void {
+	function handleFormSubmit( e : SubmitEvent ): void {
 		e.preventDefault();
 
 		errors = {
 			full_name : null,
-			rut       : null,
+			// rut       : null,
 			email     : null,
 			phone     : null
 		};
@@ -105,15 +104,16 @@
 			hasError = true;
 		}
 
-		if ( !rut.trim() ) {
-			errors.rut = 'El RUT es requerido.';
-			hasError = true;
-		} else if ( !validateRut( rut ) ) {
-			errors.rut = 'El RUT ingresado no es válido.';
-			hasError = true;
-		}
+		// Validación de RUT comentada (RUT opcional)
+		// if ( !rut.trim() ) {
+		// 	errors.rut = 'El RUT es requerido.';
+		// 	hasError = true;
+		// } else if ( !validateRut( rut ) ) {
+		// 	errors.rut = 'El RUT ingresado no es válido.';
+		// 	hasError = true;
+		// }
 
-		if ( email.trim() && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test( email.trim() ) ) {
+		if ( email.trim() && !/^[^s@]+@[^s@]+.[^s@]+$/.test( email.trim() ) ) {
 			errors.email = 'Ingresa un correo electrónico válido.';
 			hasError = true;
 		}
@@ -127,7 +127,7 @@
 
 		onSubmit( {
 			full_name         : full_name.trim(),
-			rut               : rut.trim(),
+			// rut               : rut.trim(),
 			email             : email.trim(),
 			phone             : phone.trim() ? formatPhone( phone ) : '',
 			organization,
@@ -148,14 +148,15 @@
 			error={ errors.full_name }
 		/>
 
-		<InputText
+		<!-- RUT comentado: ya no se solicita -->
+		<!-- <InputText
 			label="RUT"
 			id="member-rut"
 			required={ true }
 			placeholder="Ej: 12.345.678-9"
 			bind:value={ rut }
 			error={ errors.rut }
-		/>
+		/> -->
 	</div>
 
 	<div class="grid grid-cols-1 sm:grid-cols-2 gap-4">

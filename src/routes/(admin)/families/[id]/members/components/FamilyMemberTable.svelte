@@ -12,16 +12,16 @@
 		getFamilyRoleBadgeStyles
 	}                               from '../../../utils/constants.js';
 	import FamilyMemberRowForm      from './FamilyMemberRowForm.svelte';
-	import { formatRut }            from '$lib/utils/validation.js';
+	// import { formatRut }            from '$lib/utils/validation.js';
 
 	interface Props {
 		members    : FamilyMember[];
-		onEdit     : ( member: FamilyMember ) => void;
-		onDelete   : ( member: FamilyMember ) => void;
-		onAdd      : ( data: {
+		onEdit     : ( member : FamilyMember ) => void;
+		onDelete   : ( member : FamilyMember ) => void;
+		onAdd      : ( data : {
 			full_name         : string;
-			rut               : string;
-			email             : string;
+			rut?              : string;
+			email?            : string;
 			phone             : string;
 			organization      : CommunityOrganization;
 			is_representative : boolean;
@@ -36,7 +36,7 @@
 		onEdit,
 		onDelete,
 		onAdd,
-		isSaving = false,
+		isSaving  = false,
 		saveError = null
 	}: Props = $props();
 </script>
@@ -54,7 +54,8 @@
 			<thead>
 				<tr class="border-b border-border bg-bg-surface-2 select-none">
 					<th class="text-left px-4 py-4 font-semibold text-text-secondary w-1/4">Nombre</th>
-					<th class="text-left px-4 py-4 font-semibold text-text-secondary w-1/6">RUT</th>
+					<!-- RUT comentado: ya no se solicita -->
+					<!-- <th class="text-left px-4 py-4 font-semibold text-text-secondary w-1/6">RUT</th> -->
 					<th class="text-left px-4 py-4 font-semibold text-text-secondary w-1/6">Contacto</th>
 					<th class="text-left px-4 py-4 font-semibold text-text-secondary w-1/6">Organización</th>
 					<th class="text-left px-4 py-4 font-semibold text-text-secondary w-1/12">Rol</th>
@@ -74,15 +75,16 @@
 							{ m.full_name }
 						</td>
 
-						<td class="px-4 py-4 text-text-secondary font-mono">
+						<!-- RUT comentado: ya no se solicita -->
+						<!-- <td class="px-4 py-4 text-text-secondary font-mono">
 							{ formatRut( m.rut ) }
-						</td>
+						</td> -->
 
 						<td class="px-4 py-4 text-text-secondary">
 							<div class="text-xs space-y-0.5">
 								<p>{ m.phone || '—' }</p>
 
-                                {#if m.email}
+								{#if m.email}
 									<p class="text-[11px] text-text-muted truncate max-w-40" title={ m.email }>{ m.email }</p>
 								{/if}
 							</div>
@@ -130,12 +132,12 @@
 					</tr>
 				{/each}
 
-				<!-- Formulario en línea para agregar un nuevo miembro -->
-				<FamilyMemberRowForm onSubmit={ onAdd } isSaving={ isSaving } />
+				<!-- Formulario en línea para agregar un nuevo miembro (visible en >= md) -->
+				<FamilyMemberRowForm onSubmit={ onAdd } isSaving={ isSaving } class="hidden lg:table-row" />
 
 				{#if saveError}
-					<tr class="bg-red-500/5 select-none">
-						<td colspan="7" class="px-4 py-3 text-sm text-red-500 text-right font-medium">
+					<tr class="hidden lg:table-row bg-red-500/5 select-none">
+						<td colspan="6" class="px-4 py-3 text-sm text-red-500 text-right font-medium">
 							{ saveError }
 						</td>
 					</tr>

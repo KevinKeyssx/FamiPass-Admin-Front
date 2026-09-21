@@ -3,7 +3,7 @@
 	import { goto, invalidate } from '$app/navigation';
 	import { page }             from '$app/state';
 
-	import { Users, Plus, Trash2, Crown, User as UserIcon } from '@lucide/svelte';
+	import { Plus, Trash2, Crown, User as UserIcon } from '@lucide/svelte';
 
 	import type {
 		Family,
@@ -11,66 +11,74 @@
 		CommunityOrganization,
 		FamilyMemberRole
 	}                                   from '$lib/types/index.js';
-	import Button                       from '$lib/components/ui/Button.svelte';
-	import InputText                    from '$lib/components/ui/InputText.svelte';
-	import FamilyMemberForm             from '../components/FamilyMemberForm.svelte';
-	import Modal                        from '$lib/components/ui/Modal.svelte';
-	import {
-		getOrgLabel,
+    import {
+        getOrgLabel,
 		getFamilyRoleLabel,
 		getFamilyRoleBadgeStyles
-	}                                   from '../utils/constants.js';
-	import ButtonBack                   from '$lib/components/ui/ButtonBack.svelte';
+	}                               from '../utils/constants.js';
+	import Button                   from '$lib/components/ui/Button.svelte';
+	import InputText                from '$lib/components/ui/InputText.svelte';
+	import FamilyMemberForm         from '../components/FamilyMemberForm.svelte';
+	import Modal                    from '$lib/components/ui/Modal.svelte';
+    import ButtonBack               from '$lib/components/ui/ButtonBack.svelte';
+
 
 	interface Props {
-		data: {
+		data : {
 			family : Family | null;
 		};
 	}
+
 
 	interface FormState {
 		family_name : string;
 	}
 
-	type LocalMember = Omit<FamilyMember, 'id' | 'family_id' | 'created_at' | 'updated_at' | 'family'>;
+
+    type LocalMember = Omit<FamilyMember, 'id' | 'family_id' | 'created_at' | 'updated_at' | 'family'>;
+
 
 	let { data }: Props = $props();
 
-	const id     = $derived( page.url.searchParams.get( 'id' ) );
+
+    const id     = $derived( page.url.searchParams.get( 'id' ) );
 	const isEdit = $derived( !!id );
 
-	let errorMsg        = $state<string | null>( null );
+
+    let errorMsg        = $state<string | null>( null );
 	let isSaving        = $state( false );
 	let showMemberModal = $state( false );
 	let members         = $state<LocalMember[]>( [] );
-
-	let errors   = $state<Record<string, string | null>>( {
+	let errors          = $state<Record<string, string | null>>( {
 		family_name : null
-	} );
+	});
 
 	// svelte-ignore state_referenced_locally
 	let form = $state<FormState>( {
 		family_name : data.family?.family_name ?? ''
-	} );
+	});
 
-	function handleAddMember( data: {
+
+    function handleAddMember( data : {
 		full_name         : string;
-		rut               : string;
-		email             : string;
+		rut?              : string;
+		email?            : string;
 		phone             : string;
 		organization      : CommunityOrganization;
 		is_representative : boolean;
 		role              : FamilyMemberRole;
-	} ): void {
-		members = [ ...members, data ];
+	}): void {
+		members         = [ ...members, data as LocalMember ];
 		showMemberModal = false;
 	}
 
-	function removeMember( index: number ): void {
+
+    function removeMember( index : number ): void {
 		members = members.filter( ( _, i ) => i !== index );
 	}
 
-	async function handleSubmit( e: SubmitEvent ): Promise<void> {
+
+    async function handleSubmit( e : SubmitEvent ): Promise<void> {
 		e.preventDefault();
 
 		errorMsg = null;
@@ -109,15 +117,14 @@
 
 			if ( result.type === 'success' ) {
 				await invalidate( 'app:families' );
-
 				goto( '/families' );
 			} else if ( result.type === 'failure' ) {
-				errorMsg = ( result.data as any )?.error ?? 'Error al guardar la familia.';
-			} else if ( result.type === 'error' ) {
-				errorMsg = result.error?.message ?? 'Error inesperado del servidor.';
+				errorMsg = ( result.data as any )?.error ?? 'Ocurrió un error al guardar la familia.';
+			} else {
+				errorMsg = 'Ocurrió un error inesperado al procesar la solicitud.';
 			}
-		} catch ( err: unknown ) {
-			errorMsg = ( err as Error ).message;
+		} catch ( err : any ) {
+			errorMsg = err.message;
 		} finally {
 			isSaving = false;
 		}
@@ -128,7 +135,7 @@
 	<title>{ isEdit ? 'Editar Familia' : 'Nueva Familia' } — FamiPass Admin</title>
 </svelte:head>
 
-<div class="max-w-2xl mx-auto space-y-6">
+<div class="space-y-6">
 	<!-- Header -->
 	<div class="header-banner group">
 		<div class="header-glow"></div>
@@ -140,51 +147,51 @@
 				<h1 class="text-2xl font-extrabold bg-linear-to-r from-text-primary via-accent to-accent bg-clip-text text-transparent tracking-tight">
 					{ isEdit ? 'Editar Familia' : 'Nueva Familia' }
 				</h1>
-
 				<p class="text-xs text-text-secondary">
-					{ isEdit ? `Modificando datos de familia: ${ data.family?.family_name }` : 'Ingresa los datos de la nueva familia' }
+					{ isEdit ? 'Modifica los datos principales del grupo familiar' : 'Completa la información para crear una nueva familia en el sistema' }
 				</p>
 			</div>
 		</div>
 	</div>
 
+	<!-- Formulario Principal -->
 	<form onsubmit={ handleSubmit } class="space-y-6">
-		<!-- Información de la Familia -->
-		<div class="form-card">
-			<div class="flex items-center gap-2.5">
-				<Users size={ 20 } class="text-accent" style="filter: drop-shadow( 0 0 8px var(--accent) );" />
-
-				<h2 class="font-bold text-lg text-text-primary">Información de la familia</h2>
+		<div class="card p-6 space-y-6">
+			<div>
+				<h2 class="text-base font-bold text-text-primary mb-1">Información General</h2>
+				<p class="text-xs text-text-secondary">Nombre o apellido representativo del grupo familiar</p>
 			</div>
 
-			<div class="grid grid-cols-1 gap-4">
+			<div class="grid grid-cols-1 gap-6 max-w-xl">
 				<InputText
-					label="Nombre de la familia"
+					label="Nombre o Apellido de la Familia"
 					id="family-name"
 					required={ true }
-					placeholder="Ej: Familia Pérez"
+					placeholder="Ej: Familia González Pérez"
 					bind:value={ form.family_name }
 					error={ errors.family_name }
+					disabled={ isSaving }
 				/>
 			</div>
 		</div>
 
+		<!-- Sección de Miembros Iniciales (Solo en creación) -->
 		{#if !isEdit}
-			<!-- Integrar miembros de la familia -->
-			<div class="form-card">
-				<div class="flex items-center justify-between gap-4">
-					<div class="flex items-center gap-2.5">
-						<Users size={ 20 } class="text-accent" style="filter: drop-shadow( 0 0 8px var(--accent) );" />
-						<h2 class="font-bold text-lg text-text-primary">Miembros de la familia</h2>
+			<div class="card p-6 space-y-6">
+				<div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+					<div>
+						<h2 class="text-base font-bold text-text-primary mb-1">Miembros Iniciales</h2>
+						<p class="text-xs text-text-secondary">Puedes agregar a los primeros integrantes de esta familia de forma opcional</p>
 					</div>
+
 					<Button
 						type="button"
 						variant="secondary"
-						onclick={ () => showMemberModal = true }
-						class="text-xs font-semibold py-1.5 px-3 border border-border hover:border-accent hover:text-accent hover:bg-accent-muted/20 transition-all duration-300"
+						onclick={ () => { showMemberModal = true; } }
+						class="flex items-center gap-2 self-start sm:self-auto hover:border-accent transition-all duration-300"
 					>
-						<Plus size={ 14 } />
-						Agregar Miembro
+						<Plus size={ 16 } />
+						<span>Agregar Integrante</span>
 					</Button>
 				</div>
 
@@ -198,14 +205,19 @@
 							<thead>
 								<tr class="border-b border-border bg-bg-surface-2 select-none">
 									<th class="px-4 py-3 font-semibold text-text-secondary">Nombre</th>
-									<th class="px-4 py-3 font-semibold text-text-secondary">RUT</th>
+									<!-- RUT comentado: ya no se solicita -->
+									<!-- <th class="px-4 py-3 font-semibold text-text-secondary">RUT</th> -->
 									<th class="px-4 py-3 font-semibold text-text-secondary">Organización</th>
-									<th class="px-4 py-3 font-semibold text-text-secondary">Rol</th>
-									<th class="px-4 py-3 font-semibold text-text-secondary text-center">Representante</th>
-									<th class="px-4 py-3 font-semibold text-text-secondary text-right">Acciones</th>
+
+                                    <th class="px-4 py-3 font-semibold text-text-secondary">Rol</th>
+
+                                    <th class="px-4 py-3 font-semibold text-text-secondary text-center">Representante</th>
+
+                                    <th class="px-4 py-3 font-semibold text-text-secondary text-right">Acciones</th>
 								</tr>
 							</thead>
-							<tbody class="divide-y divide-border/60">
+
+                            <tbody class="divide-y divide-border/60">
 								{#each members as m, i}
 									<tr class="hover:bg-bg-surface-2/20 transition-colors">
 										<td class="px-4 py-3 text-text-primary font-medium flex items-center gap-2">
@@ -216,21 +228,25 @@
 											{/if}
 											{ m.full_name }
 										</td>
-										<td class="px-4 py-3 text-text-secondary font-mono">{ m.rut }</td>
+										<!-- RUT comentado: ya no se solicita -->
+										<!-- <td class="px-4 py-3 text-text-secondary font-mono">{ m.rut }</td> -->
 										<td class="px-4 py-3 text-text-secondary">{ getOrgLabel( m.organization ) }</td>
-										<td class="px-4 py-3 text-text-secondary">
+
+                                        <td class="px-4 py-3 text-text-secondary">
 											<span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold border { getFamilyRoleBadgeStyles( m.role ) }">
 												{ getFamilyRoleLabel( m.role ) }
 											</span>
 										</td>
-										<td class="px-4 py-3 text-center">
+
+                                        <td class="px-4 py-3 text-center">
 											{#if m.is_representative}
 												<span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-accent-muted text-accent">Sí</span>
 											{:else}
 												<span class="text-text-muted text-xs">—</span>
 											{/if}
 										</td>
-										<td class="px-4 py-3 text-right">
+
+                                        <td class="px-4 py-3 text-right">
 											<button
 												type="button"
 												onclick={ () => removeMember( i ) }
@@ -249,39 +265,31 @@
 		{/if}
 
 		{#if errorMsg}
-			<div class="px-4 py-3 rounded-xl bg-red-500/10 border border-red-500/30 text-red-500 text-sm">
-				{ errorMsg }
-			</div>
+			<p class="text-red-500 text-sm">{ errorMsg }</p>
 		{/if}
 
-		<div class="flex gap-3 justify-end">
-			<a href="/families">
-				<Button variant="secondary" class="hover:text-accent hover:bg-accent-muted/30 transition-all duration-300">
-					Cancelar
-				</Button>
-			</a>
+		<div class="flex items-center justify-end gap-3 pt-4">
+			<Button type="button" variant="secondary" onclick={ () => goto( '/families' ) }>
+				Cancelar
+			</Button>
 
-			<Button
-				type="submit"
-				variant="primary"
-				loading={ isSaving }
-			>
+			<Button type="submit" variant="primary" loading={ isSaving }>
 				{ isEdit ? 'Guardar Cambios' : 'Crear Familia' }
 			</Button>
 		</div>
 	</form>
 </div>
 
-<!-- Modal para agregar miembros en creación -->
+<!-- Modal para agregar miembro inicial -->
 <Modal
-	open={ showMemberModal }
-	onClose={ () => showMemberModal = false }
-	title="Agregar Miembro"
-	size="lg"
+	open    = { showMemberModal }
+	onClose = { () => { showMemberModal = false; } }
+	title   = "Agregar Integrante Familiar"
+	size    = "lg"
 >
 	<FamilyMemberForm
-		onSubmit={ handleAddMember }
-		onCancel={ () => showMemberModal = false }
-		submitLabel="Agregar"
+		onSubmit    = { handleAddMember }
+		onCancel    = { () => { showMemberModal = false; } }
+		submitLabel = "Agregar a la lista"
 	/>
 </Modal>
