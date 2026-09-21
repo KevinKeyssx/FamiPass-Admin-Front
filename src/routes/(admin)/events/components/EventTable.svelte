@@ -1,23 +1,26 @@
 <script lang="ts">
 	import { CalendarDays } from '@lucide/svelte';
 
-	import Actions              from '$lib/components/shared/Actions.svelte';
-	import type { EventConfig } from '$lib/types/index.js';
-	import { isEventExpired }   from '$lib/utils/date.js';
-	import Preview              from '$lib/components/shared/Preview.svelte';
-	import Status               from './Status.svelte';
+	import Actions                             from '$lib/components/shared/Actions.svelte';
+	import type { EventConfig }                from '$lib/types/index.js';
+	import { isEventExpired, hasEventStarted } from '$lib/utils/date.js';
+	import Preview                             from '$lib/components/shared/Preview.svelte';
+	import Status                              from './Status.svelte';
 
 
 	interface Props {
-		events   : EventConfig[];
-		onDelete : ( event: EventConfig ) => void;
+		events        : EventConfig[];
+		isSuperAdmin? : boolean;
+		onDelete      : ( event: EventConfig ) => void;
 	}
 
 
 	let {
 		events,
+		isSuperAdmin = false,
 		onDelete
 	}: Props = $props();
+
 
 
 	function formatDate( d: string ): string {
@@ -113,10 +116,13 @@
 									<Preview href={ `/events/${ event.id }` } />
 
 									<Actions
-										editHref    = "/events/form?id={ event.id }"
-										canDelete   = { event.status === 'DRAFT' }
-										onDelete    = {() => { onDelete( event ); }}
+										editHref            = "/events/form?id={ event.id }"
+										canDelete           = { event.status === 'DRAFT' }
+										canEdit             = { isSuperAdmin || !hasEventStarted( event.event_date ) }
+										disabledEditTooltip = "El evento ya comenzó o finalizó. Solo Super Admin puede modificarlo."
+										onDelete            = { () => { onDelete( event ); } }
 									/>
+
 								</div>
 							</td>
 						</tr>
