@@ -3,10 +3,15 @@ import { fail } from '@sveltejs/kit';
 import type { PageServerLoad, Actions } from './$types.js';
 import { getEvents, deleteEvent }       from '$lib/server/supabase/services/events.service.js';
 import type { EventStatus }             from '$lib/types/index.js';
+import { auth }                         from '$lib/auth/auth.js';
+import { getUserRole }                  from '$lib/server/supabase/services/users.service.js';
 
 
-export const load: PageServerLoad = async ( { url, depends } ) => {
+export const load: PageServerLoad = async ( { url, request, depends } ) => {
 	depends( 'app:events' );
+
+	const session = await auth.api.getSession( { headers: request.headers } );
+	const role    = await getUserRole( session?.user.email ?? '' );
 
 	const search       = url.searchParams.get( 'search' ) || '';
 	const date         = url.searchParams.get( 'date' ) || '';
@@ -29,16 +34,19 @@ export const load: PageServerLoad = async ( { url, depends } ) => {
 
 		return {
 			events,
-			count
+			count,
+			isSuperAdmin : role === 'SUPER_ADMIN'
 		};
 	} catch ( err: any ) {
 		return {
-			events : [],
-			count  : 0,
-			error  : err.message
+			events       : [],
+			count        : 0,
+			isSuperAdmin : role === 'SUPER_ADMIN',
+			error        : err.message
 		};
 	}
 };
+
 
 
 export const actions: Actions = {
