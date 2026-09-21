@@ -1,49 +1,44 @@
 import { fail } from '@sveltejs/kit';
 
-import type { PageServerLoad, Actions }                 from './$types.js';
-import { getFamilyById, createFamily, updateFamily }    from '$lib/server/supabase/services/families.service.js';
-import { createFamilyMember }                           from '$lib/server/supabase/services/familyMembers.service.js';
-import type { Family, FamilyMember }                    from '$lib/types/index.js';
+import {
+	createFamily,
+	updateFamily
+}                                       from '$lib/server/supabase/services/families.service.js';
+import { createFamilyMember }           from '$lib/server/supabase/services/familyMembers.service.js';
+import type { Family, FamilyMember }    from '$lib/types/index.js';
+import type { PageServerLoad, Actions } from './$types.js';
 
-export const load: PageServerLoad = async ( event ) => {
-	const id = event.url.searchParams.get( 'id' );
 
-	let family: Family | null = null;
+export const load : PageServerLoad = async ( { url } ) => {
+	const id = url.searchParams.get( 'id' );
 
-	if ( id ) {
-		try {
-			family = await getFamilyById( id );
-		} catch ( err: any ) {
-			family = null;
-		}
+	if ( !id ) {
+		return { family : null };
 	}
 
-	return {
-		family
-	};
+	return { family : null };
 };
 
-export const actions: Actions = {
-	save: async ( event ) => {
-		const id       = event.url.searchParams.get( 'id' );
-		const formData = await event.request.formData();
-
+export const actions : Actions = {
+	save : async ( { request, url } ) => {
+		const id         = url.searchParams.get( 'id' );
+		const formData   = await request.formData();
 		const familyName = formData.get( 'family_name' ) as string;
 		const membersStr = formData.get( 'members' ) as string;
 
 		if ( !familyName || !familyName.trim() ) {
-			return fail( 400, { error: 'El nombre de la familia es requerido.' } );
+			return fail( 400, { error : 'El nombre de la familia es requerido.' } );
 		}
 
 		try {
 			if ( id ) {
-				const familyData: Partial<Omit<Family, 'id' | 'created_at' | 'updated_at' | 'members_count'>> = {
+				const familyData : Partial<Omit<Family, 'id' | 'created_at' | 'updated_at' | 'members_count'>> = {
 					family_name : familyName.trim()
 				};
 				await updateFamily( id, familyData );
 			} else {
 				const code = Math.floor( Math.random() * 99999 ) + 1;
-				const familyData: Omit<Family, 'id' | 'created_at' | 'updated_at' | 'members_count'> = {
+				const familyData : Omit<Family, 'id' | 'created_at' | 'updated_at' | 'members_count'> = {
 					family_name : familyName.trim(),
 					code        : code
 				};
@@ -56,7 +51,7 @@ export const actions: Actions = {
 						await createFamilyMember( {
 							family_id         : newFamily.id,
 							full_name         : member.full_name,
-							rut               : member.rut,
+							rut               : member.rut || null,
 							email             : member.email || null,
 							phone             : member.phone || null,
 							organization      : member.organization,
@@ -67,9 +62,9 @@ export const actions: Actions = {
 				}
 			}
 
-			return { success: true };
-		} catch ( err: any ) {
-			return fail( 400, { error: err.message } );
+			return { success : true };
+		} catch ( err : any ) {
+			return fail( 400, { error : err.message } );
 		}
 	}
 };
