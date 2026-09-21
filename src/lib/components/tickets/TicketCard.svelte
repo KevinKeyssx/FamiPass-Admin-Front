@@ -16,18 +16,18 @@
         FamilyEvent,
         Order
     }                       from '$lib/types/index.js';
-    import { theme }        from '$lib/stores/theme.svelte.js';
-	import Modal            from '$lib/components/ui/Modal.svelte';
+    import { theme }            from '$lib/stores/theme.svelte.js';
+	import Modal                from '$lib/components/ui/Modal.svelte';
+	import { PUBLIC_STAFF_URL } from '$env/static/public';
 
 
     interface Props {
 		familyEvent : FamilyEvent & { orders?: Order[] };
 		order?      : Order | null;
-		staffUrl    : string;
 	}
 
 
-    let { familyEvent, order = null, staffUrl }: Props = $props();
+    let { familyEvent, order = null }: Props = $props();
 
 
 	let qrInstance      : QRCodeStyling | null = null;
@@ -42,10 +42,9 @@
     const accentColor   = $derived( theme.isDark ? '#F59E0B' : '#00B4D8' );
 	const qrUrl         = $derived(
 		familyEvent.qr_code_hash
-			? `${ staffUrl }/scan/${ familyEvent.qr_code_hash }`
+			? `${ PUBLIC_STAFF_URL }/scan/${ familyEvent.qr_code_hash }`
 			: null
 	);
-
 
 
 	async function confirmDelete(): Promise<void> {
@@ -86,20 +85,21 @@
 		if ( order?.family_members && order.family_members.length > 0 ) {
 			return order.family_members;
 		}
-		return familyEvent.family?.members?.map( ( m ) => ({
-			rut              : m.rut,
-			full_name        : m.full_name,
-			organization     : m.organization,
-			is_representative: m.is_representative,
+
+        return familyEvent.family?.members?.map( ( m ) => ({
+			rut               : m.rut,
+			full_name         : m.full_name,
+			organization      : m.organization,
+			is_representative : m.is_representative,
 		})) ?? [];
 	});
 
 
     function formatDate( d: string ): string {
 		return new Date( d ).toLocaleDateString( 'es-CL', {
-			day  : 'numeric',
-			month: 'long',
-			year : 'numeric',
+			day   : 'numeric',
+			month : 'long',
+			year  : 'numeric',
 		});
 	}
 
@@ -109,18 +109,18 @@
 
 		qrContainer.innerHTML = '';
 
-		qrInstance = new QRCodeStyling({
-			width         : 180,
-			height        : 180,
-			type          : 'svg',
-			data          : qrUrl,
-			dotsOptions   : { color: accentColor, type: 'rounded' },
-			cornersSquareOptions: { type: 'extra-rounded', color: accentColor },
-			cornersDotOptions   : { type: 'dot',           color: accentColor },
-			backgroundOptions   : { color: 'transparent' },
-			imageOptions        : { hideBackgroundDots: true, imageSize: 0.3, margin: 4 },
-			qrOptions           : { errorCorrectionLevel: 'M' },
-		});
+		qrInstance = new QRCodeStyling( {
+			width                : 180,
+			height               : 180,
+			type                 : 'svg',
+			data                 : qrUrl,
+			dotsOptions          : { color: accentColor, type: 'rounded' },
+			cornersSquareOptions : { type: 'extra-rounded', color: accentColor },
+			cornersDotOptions    : { type: 'dot',           color: accentColor },
+			backgroundOptions    : { color: 'transparent' },
+			imageOptions         : { hideBackgroundDots: true, imageSize: 0.3, margin: 4 },
+			qrOptions            : { errorCorrectionLevel: 'M' },
+		} );
 
 		qrInstance.append( qrContainer );
 	}
@@ -155,7 +155,8 @@
 				<p class="text-xs font-semibold text-white/70 uppercase tracking-wider mb-1">
 					{familyEvent.event?.event_name ?? 'Evento'}
 				</p>
-				<h3 class="text-lg font-bold text-white truncate">
+
+                <h3 class="text-lg font-bold text-white truncate">
 					{familyEvent.family?.family_name ?? 'Familia'}
 				</h3>
 			</div>
@@ -173,11 +174,11 @@
 				{/if}
 
 				<button
-					type="button"
-					onclick={ () => deleteModalOpen = true }
-					disabled={ ordersTaken > 0 }
-					class="p-1.5 rounded-lg text-white/80 hover:text-red-200 hover:bg-white/10 disabled:opacity-40 disabled:hover:text-white/80 disabled:hover:bg-transparent transition-colors"
-					title={ ordersTaken > 0 ? 'No se puede eliminar la familia porque ya tiene órdenes registradas' : 'Eliminar familia del evento' }
+					type        = "button"
+					onclick     = { () => deleteModalOpen = true }
+					disabled    = { ordersTaken > 0 }
+					class       = "p-1.5 rounded-lg text-white/80 hover:text-red-200 hover:bg-white/10 disabled:opacity-40 disabled:hover:text-white/80 disabled:hover:bg-transparent transition-colors"
+					title       = { ordersTaken > 0 ? 'No se puede eliminar la familia porque ya tiene órdenes registradas' : 'Eliminar familia del evento' }
 				>
 					<Trash2 size={ 16 } />
 				</button>
@@ -186,7 +187,8 @@
 		{#if familyEvent.event?.event_date}
 			<div class="flex items-center justify-between mt-2">
 				<p class="text-white/80 text-xs">{ formatDate( familyEvent.event.event_date ) }</p>
-				<span class="text-white/90 text-xs font-semibold bg-white/10 px-2 py-0.5 rounded-md">
+
+                <span class="text-white/90 text-xs font-semibold bg-white/10 px-2 py-0.5 rounded-md">
 					Órdenes: { ordersTaken } / { maxOrders }
 				</span>
 			</div>
@@ -214,11 +216,13 @@
 			<div>
 				<div class="flex items-center gap-1.5 mb-2">
 					<Users size={14} class="text-(--accent)" />
-					<p class="text-xs font-semibold text-(--text-secondary) uppercase tracking-wider">
+
+                    <p class="text-xs font-semibold text-(--text-secondary) uppercase tracking-wider">
 						Miembros ({members().length})
 					</p>
 				</div>
-				<ul class="space-y-1.5">
+
+                <ul class="space-y-1.5">
 					{#each members() as member}
 						<li class="flex items-center gap-2">
 							{#if member.is_representative}
@@ -226,7 +230,8 @@
 							{:else}
 								<UserIcon size={13} class="text-(--text-muted) shrink-0" />
 							{/if}
-							<span class="text-sm text-(--text-primary) font-medium truncate">
+
+                            <span class="text-sm text-(--text-primary) font-medium truncate">
 								{member.full_name}
 							</span>
 						</li>
@@ -240,15 +245,18 @@
 			<div>
 				<div class="flex items-center gap-1.5 mb-2">
 					<ShoppingBasket size={14} class="text-(--accent)" />
-					<p class="text-xs font-semibold text-(--text-secondary) uppercase tracking-wider">
+
+                    <p class="text-xs font-semibold text-(--text-secondary) uppercase tracking-wider">
 						Productos reclamados
 					</p>
 				</div>
-				<ul class="space-y-1">
+
+                <ul class="space-y-1">
 					{#each order.items as item}
 						<li class="flex justify-between text-sm">
 							<span class="text-(--text-primary) truncate">{item.product?.name ?? item.product_id}</span>
-							<span class="text-(--text-muted) shrink-0 ml-2">×{item.quantity_claimed}</span>
+
+                            <span class="text-(--text-muted) shrink-0 ml-2">×{item.quantity_claimed}</span>
 						</li>
 					{/each}
 				</ul>
@@ -271,12 +279,14 @@
 				class="w-45 h-45 flex items-center justify-center"
 				aria-label="Código QR del ticket"
 			></div>
-			{#if familyEvent.short_code}
+
+            {#if familyEvent.short_code}
 				<p class="text-sm text-(--accent) font-mono font-bold mt-2 text-center">
 					CÓD: { familyEvent.short_code }
 				</p>
 			{/if}
-			<p class="text-xs text-(--text-muted) mt-1 font-mono break-all text-center">
+
+            <p class="text-xs text-(--text-muted) mt-1 font-mono break-all text-center">
 				{ familyEvent.qr_code_hash }
 			</p>
 		{:else}
@@ -291,13 +301,13 @@
 </article>
 
 <Modal
-	open={ deleteModalOpen }
-	onClose={ () => deleteModalOpen = false }
-	onConfirm={ confirmDelete }
-	title="Desasociar Familia"
-	confirmLabel="Desasociar"
-	confirmVariant="danger"
-	loading={ isDeleting }
+	open            = { deleteModalOpen }
+	onClose         = { () => deleteModalOpen = false }
+	onConfirm       = { confirmDelete }
+	title           = "Desasociar Familia"
+	confirmLabel    = "Desasociar"
+	confirmVariant  = "danger"
+	loading         = { isDeleting }
 >
 	<p class="text-sm">¿Estás seguro de que deseas desasociar a la familia <strong class="text-(--text-primary)">"{ familyEvent.family?.family_name }"</strong> de este evento?</p>
 	<p class="mt-2 text-xs text-(--text-muted)">Esta acción eliminará el ticket familiar y su código QR. No se puede deshacer.</p>
