@@ -13,15 +13,16 @@
 	import ButtonCreate         from '$lib/components/ui/ButtonCreate.svelte';
 
 
-    interface Props {
+	interface Props {
 		data: {
-			events : EventConfig[];
-			count  : number;
+			events       : EventConfig[];
+			count        : number;
+			isSuperAdmin : boolean;
 		};
 	}
 
 
-    let { data } : Props = $props();
+	let { data }: Props = $props();
 
 
     let searchQuery             = $state( page.url.searchParams.get( 'search' ) || '' );
@@ -43,9 +44,6 @@
 
 
     const currentView = $derived( page.url.searchParams.get( 'view' ) || 'card' );
-
-
-
 
 
     $effect( () => {
@@ -105,9 +103,6 @@
 			replaceState : true
 		} );
 	}
-
-
-
 
 
     function clearAllFilters(): void {
@@ -195,7 +190,8 @@
 			<h1 class="text-2xl font-extrabold bg-linear-to-r from-text-primary via-accent to-accent bg-clip-text text-transparent tracking-tight">
 				Eventos
 			</h1>
-			<p class="text-xs text-(--text-secondary) mt-0.5">
+
+            <p class="text-xs text-(--text-secondary) mt-0.5">
 				Gestión completa de eventos de FamiPass
 			</p>
 		</div>
@@ -220,10 +216,10 @@
 
 	<!-- Event List View (Table or Card) -->
 	<div class="flex flex-col">
-		{#if currentView === 'table' }
-			<EventTable events={ data.events } onDelete={ openDeleteModal } />
+		{#if currentView === 'table'}
+			<EventTable events={ data.events } isSuperAdmin={ data.isSuperAdmin } onDelete={ openDeleteModal } />
 		{:else}
-			<EventCard events={ data.events } onDelete={ openDeleteModal } />
+			<EventCard events={ data.events } isSuperAdmin={ data.isSuperAdmin } onDelete={ openDeleteModal } />
 		{/if}
 
 		<!-- Reusable Pagination Component -->
@@ -233,17 +229,19 @@
 
 <!-- Delete modal -->
 <Modal
-	open={ deleteModal.open }
-	title="Eliminar evento"
-	onClose={() => { deleteModal = { open: false, id: null, name: '' }; deleteError = null; }}
-	onConfirm={ confirmDelete }
-	confirmLabel="Eliminar"
-	confirmVariant="danger"
-	loading={ isDeleting }
+	open            = { deleteModal.open }
+	title           = "Eliminar evento"
+	onClose         = {() => { deleteModal = { open: false, id: null, name: '' }; deleteError = null; }}
+	onConfirm       = { confirmDelete }
+	confirmLabel    = "Eliminar"
+	confirmVariant  = "danger"
+	loading         = { isDeleting }
 >
 	<p>¿Estás seguro de que deseas eliminar el evento <strong class="text-text-primary">"{ deleteModal.name }"</strong>?</p>
-	<p class="mt-2 text-xs">Esta acción no se puede deshacer.</p>
-	{#if deleteError }
+
+    <p class="mt-2 text-xs">Esta acción no se puede deshacer.</p>
+
+    {#if deleteError }
 		<p class="mt-3 text-red-500 text-sm">{ deleteError }</p>
 	{/if}
 </Modal>
