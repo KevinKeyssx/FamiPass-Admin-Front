@@ -3,34 +3,35 @@
 	import { goto, invalidate } from '$app/navigation';
 	import { deserialize }      from '$app/forms';
 
-    import { Pencil, CalendarDays, Users, Plus } from '@lucide/svelte';
+	import { Pencil, CalendarDays, Users, Plus, ShoppingBag } from '@lucide/svelte';
 
-    import type {
+	import type {
 		EventConfig,
 		FamilyEvent,
 		Order,
 		Family
-	}                           from '$lib/types/index.js';
-	import TicketVerse          from '$lib/components/tickets/TicketVerse.svelte';
-	import StatusBadge          from '$lib/components/ui/StatusBadge.svelte';
-	import Button               from '$lib/components/ui/Button.svelte';
-	import Modal                from '$lib/components/ui/Modal.svelte';
-	import ButtonBack           from '$lib/components/ui/ButtonBack.svelte';
-	import Pagination           from '$lib/components/shared/Pagination.svelte';
-	import SearchInput          from '$lib/components/ui/SearchInput.svelte';
-    import { isEventExpired }   from '$lib/utils/date.js';
+	}                                           from '$lib/types/index.js';
+	import TicketVerse                          from '$lib/components/tickets/TicketVerse.svelte';
+	import StatusBadge                          from '$lib/components/ui/StatusBadge.svelte';
+	import Button                               from '$lib/components/ui/Button.svelte';
+	import Modal                                from '$lib/components/ui/Modal.svelte';
+	import ButtonBack                           from '$lib/components/ui/ButtonBack.svelte';
+	import Pagination                           from '$lib/components/shared/Pagination.svelte';
+	import SearchInput                          from '$lib/components/ui/SearchInput.svelte';
+	import { isEventExpired, hasEventStarted }  from '$lib/utils/date.js';
 
 
 	interface EventDetail extends EventConfig {
-		family_events: Array<FamilyEvent & { orders: Order[] }>;
+		family_events : Array<FamilyEvent & { orders: Order[] }>;
 	}
 
 
 	interface Props {
-		data: {
+		data : {
 			event         : EventDetail;
 			families      : Family[];
 			familiesCount : number;
+			isSuperAdmin  : boolean;
 		};
 	}
 
@@ -43,11 +44,13 @@
 	let modalSearch      = $state( page.url.searchParams.get( 'search' ) || '' );
 	let addError         = $state<string | null>( null );
 
-	const isExpired = $derived( data.event.expires_at ? isEventExpired( data.event.expires_at ) : false );
 
-
-
-	const filteredFamilyEvents = $derived(
+    const isExpired     = $derived( data.event.expires_at ? isEventExpired( data.event.expires_at ) : false );
+	const hasStarted    = $derived(
+        data.event.event_date ? hasEventStarted( data.event.event_date ) : false
+	);
+    const canEdit               = $derived( data.isSuperAdmin || !hasStarted );
+	const filteredFamilyEvents  = $derived(
 		( data.event.family_events ?? [] ).filter( ( fe ) => {
 			if ( !search.trim() ) return true;
 
@@ -56,12 +59,16 @@
 			const shortCode     = fe.short_code?.toLowerCase() || '';
 
             return familyName.includes( term ) || shortCode.includes( term );
-		})
+		} )
 	);
 
 
 	function formatDate( d: string ): string {
-		return new Date( d ).toLocaleDateString( 'es-CL', { day: '2-digit', month: 'long', year: 'numeric' } );
+		return new Date( d ).toLocaleDateString( 'es-CL', {
+            day   : '2-digit',
+            month : 'long',
+            year  : 'numeric'
+        } );
 	}
 
 
@@ -126,9 +133,6 @@
 			isAdding = false;
 		}
 	}
-
-
-	const staffUrl = 'http://localhost:5174';
 </script>
 
 <svelte:head>
@@ -160,14 +164,33 @@
 		</div>
 
 		<div class="flex gap-3 relative z-10 shrink-0">
-			<a href="/events/form?id={ data.event.id }">
-				<Button variant="secondary">
-					<Pencil size={ 15 } />
-					Editar
-				</Button>
-			</a>
+			{#if canEdit}
+				<a href="/events/form?id={ data.event.id }">
+					<Button variant="secondary">
+						<Pencil size={ 15 } />
+						Editar
+					</Button>
+				</a>
+			{:else}
+				<div title="El evento ya comenzó o finalizó. Solo un Super Administrador puede modificarlo.">
+					<Button variant="secondary" disabled={ true } class="opacity-40 cursor-not-allowed">
+						<Pencil size={ 15 } />
+						Editar
+					</Button>
+				</div>
+			{/if}
 		</div>
 	</div>
+
+	{#if hasStarted && !data.isSuperAdmin}
+		<div class="p-4 rounded-2xl bg-amber-500/10 border border-amber-500/30 text-amber-500 text-sm flex items-center gap-2">
+			<span>⚠️</span>
+			<div>
+				<p class="font-bold">Este evento ya comenzó o ha finalizado (Fecha: { formatDate( data.event.event_date ) }).</p>
+				<p class="text-xs">Solo un Super Administrador puede modificar los datos y productos de este evento.</p>
+			</div>
+		</div>
+	{/if}
 
 	{#if isExpired}
 		<div class="p-4 rounded-2xl bg-red-500/10 border border-red-500/30 text-red-500 text-sm flex items-center gap-2">
@@ -180,7 +203,6 @@
 	{/if}
 
 	<!-- Event meta -->
-
 	<div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
 		{#each [
 			{ label: 'Lím. miembros',    value: data.event.max_family_members   ?? '—' },
@@ -194,6 +216,44 @@
 			</div>
 		{/each}
 	</div>
+
+	<!-- Event Products section -->
+	<div class="card p-5 space-y-4">
+		<div class="flex items-center justify-between gap-3">
+			<div class="flex items-center gap-2.5">
+				<ShoppingBag size={ 18 } class="text-(--accent)" />
+				<h2 class="text-base font-bold text-(--text-primary)">
+					Productos del evento
+				</h2>
+			</div>
+
+			<span class="text-xs px-2.5 py-0.5 rounded-full bg-(--accent)/10 text-(--accent) font-semibold border border-(--accent)/20">
+				{ data.event.event_products?.length ?? 0 } { ( data.event.event_products?.length ?? 0 ) === 1 ? 'producto' : 'productos' }
+			</span>
+		</div>
+
+		{#if !data.event.event_products || data.event.event_products.length === 0}
+			<p class="text-xs text-(--text-muted) italic">No hay productos asociados a este evento.</p>
+		{:else}
+			<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+				{#each data.event.event_products as ep}
+					<div class="flex items-center justify-between p-3 rounded-xl bg-(--bg-base)/40 dark:bg-black/15 border border-(--border)/40">
+						<div class="min-w-0 pr-2">
+							<p class="text-sm font-semibold text-(--text-primary) truncate">
+								{ ep.product?.name ?? 'Producto' }
+							</p>
+							<p class="text-[11px] text-(--text-secondary)">Cantidad por entrega</p>
+						</div>
+
+						<span class="px-3 py-1 rounded-lg bg-(--accent-muted) text-(--accent) font-extrabold text-sm shrink-0">
+							x{ ep.quantity }
+						</span>
+					</div>
+				{/each}
+			</div>
+		{/if}
+	</div>
+
 
 	<!-- Family tickets section -->
 	<div>
@@ -242,7 +302,6 @@
 					<TicketVerse
 						familyEvent={ fe }
 						order={ fe.orders?.[0] ?? null }
-						{ staffUrl }
 						{ isExpired }
 					/>
 				{/each}
