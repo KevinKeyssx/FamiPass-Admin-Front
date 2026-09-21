@@ -1,10 +1,9 @@
 <script lang="ts">
-	import { page } from '$app/state';
-	import { goto } from '$app/navigation';
+	import { goto, afterNavigate } from '$app/navigation';
 
-	import { authClient }   from '$lib/auth/auth-client.js';
-	import Menu             from '$lib/components/shared/Menu.svelte';
-	import Header           from '$lib/components/shared/home/Header.svelte';
+	import { authClient } from '$lib/auth/auth-client.js';
+	import Menu           from '$lib/components/shared/Menu.svelte';
+	import Header         from '$lib/components/shared/home/Header.svelte';
 
 
 	let { children, data } = $props();
@@ -17,20 +16,20 @@
 		sidebarOpen = !sidebarOpen;
 	}
 
+	function closeSidebar(): void {
+		sidebarOpen = false;
+	}
+
+	// Cerrar el menú lateral automáticamente cada vez que se navega a otra ruta
+	afterNavigate( () => {
+		sidebarOpen = false;
+	} );
+
 
 	async function handleLogout(): Promise<void> {
 		await authClient.signOut();
 		goto( '/login' );
 	}
-
-
-	const currentPath = $derived( page.url.pathname );
-
-
-	const navItems = [
-		{ href: '/dashboard', label: 'Dashboard' },
-		{ href: '/events',    label: 'Eventos' }
-	];
 </script>
 
 <div class="flex h-screen overflow-hidden bg-(--bg-base) relative">
@@ -56,7 +55,7 @@
 		<div class="absolute bottom-[-15%] left-[-5%] w-[50%] h-[50%] rounded-full bg-(--accent)/10 blur-[110px] animate-glow-fast"></div>
 	</div>
 
-	<Menu {sidebarOpen} {toggleSidebar} {handleLogout} {data} />
+	<Menu bind:sidebarOpen {closeSidebar} {handleLogout} {data} />
 
 	<!-- ── Main Content ── -->
 	<div class="flex-1 flex flex-col min-w-0 overflow-hidden relative z-10">
