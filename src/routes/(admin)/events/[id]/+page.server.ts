@@ -9,10 +9,15 @@ import {
 import { getFamilies }      from '$lib/server/supabase/services/families.service.js';
 import type { Family }      from '$lib/types/index.js';
 import { isEventExpired }   from '$lib/utils/date.js';
+import { auth }             from '$lib/auth/auth.js';
+import { getUserRole }      from '$lib/server/supabase/services/users.service.js';
 
 
-export const load: PageServerLoad = async ( { params, url, depends } ) => {
+export const load: PageServerLoad = async ( { params, url, request, depends } ) => {
 	depends( 'app:event' );
+
+	const session = await auth.api.getSession( { headers: request.headers } );
+	const role    = await getUserRole( session?.user.email ?? '' );
 
 	const event = await getEventById( params.id );
 
@@ -41,13 +46,15 @@ export const load: PageServerLoad = async ( { params, url, depends } ) => {
 		return {
 			event,
 			families      : paginatedFamilies,
-			familiesCount : count
+			familiesCount : count,
+			isSuperAdmin  : role === 'SUPER_ADMIN'
 		};
 	} catch ( err: any ) {
 		return {
 			event,
 			families      : [],
 			familiesCount : 0,
+			isSuperAdmin  : role === 'SUPER_ADMIN',
 			error         : err.message
 		};
 	}
@@ -107,4 +114,3 @@ export const actions: Actions = {
 		}
 	}
 };
-
