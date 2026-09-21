@@ -1,13 +1,13 @@
 import { fail } from '@sveltejs/kit';
 
 import {
-    getFamilyMembers,
+	getFamilyMembers,
 	createFamilyMember,
 	updateFamilyMember,
 	deleteFamilyMember
 }                                       from '$lib/server/supabase/services/familyMembers.service.js';
 import type {
-    FamilyMember,
+	FamilyMember,
 	CommunityOrganization,
 	FamilyMemberRole
 }                                       from '$lib/types/index.js';
@@ -15,7 +15,7 @@ import { getFamilyById }                from '$lib/server/supabase/services/fami
 import type { PageServerLoad, Actions } from './$types.js';
 
 
-export const load: PageServerLoad = async ( { params, depends } ) => {
+export const load : PageServerLoad = async ( { params, depends } ) => {
 	depends( 'app:family-members' );
 
 	try {
@@ -26,7 +26,7 @@ export const load: PageServerLoad = async ( { params, depends } ) => {
 			family,
 			members
 		};
-	} catch ( err: any ) {
+	} catch ( err : any ) {
 		return {
 			family  : null,
 			members : [],
@@ -35,8 +35,8 @@ export const load: PageServerLoad = async ( { params, depends } ) => {
 	}
 };
 
-export const actions: Actions = {
-	save: async ( { params, request, url } ) => {
+export const actions : Actions = {
+	save : async ( { params, request, url } ) => {
 		const memberId = url.searchParams.get( 'memberId' );
 		const formData = await request.formData();
 
@@ -49,18 +49,19 @@ export const actions: Actions = {
 		const role             = ( formData.get( 'role' ) as FamilyMemberRole ) || ( isRepresentative ? 'ADMIN' : 'VIEWER' );
 
 		if ( !fullName || !fullName.trim() ) {
-			return fail( 400, { error: 'El nombre completo es requerido.' } );
+			return fail( 400, { error : 'El nombre completo es requerido.' } );
 		}
 
-		if ( !rut || !rut.trim() ) {
-			return fail( 400, { error: 'El RUT es requerido.' } );
-		}
+		// Validación de RUT comentada (RUT opcional)
+		// if ( !rut || !rut.trim() ) {
+		// 	return fail( 400, { error : 'El RUT es requerido.' } );
+		// }
 
 		try {
 			if ( memberId ) {
-				const memberData: Partial<Omit<FamilyMember, 'id' | 'family_id' | 'created_at' | 'updated_at' | 'family'>> = {
+				const memberData : Partial<Omit<FamilyMember, 'id' | 'family_id' | 'created_at' | 'updated_at' | 'family'>> = {
 					full_name         : fullName.trim(),
-					rut               : rut.trim(),
+					rut               : rut && rut.trim() ? rut.trim() : null,
 					email             : email ? email.trim() : null,
 					phone             : phone ? phone.trim() : null,
 					organization      : organization,
@@ -69,10 +70,10 @@ export const actions: Actions = {
 				};
 				await updateFamilyMember( memberId, memberData );
 			} else {
-				const memberData: Omit<FamilyMember, 'id' | 'created_at' | 'updated_at' | 'family'> = {
+				const memberData : Omit<FamilyMember, 'id' | 'created_at' | 'updated_at' | 'family'> = {
 					family_id         : params.id,
 					full_name         : fullName.trim(),
-					rut               : rut.trim(),
+					rut               : rut && rut.trim() ? rut.trim() : null,
 					email             : email ? email.trim() : null,
 					phone             : phone ? phone.trim() : null,
 					organization      : organization,
@@ -82,26 +83,25 @@ export const actions: Actions = {
 				await createFamilyMember( memberData );
 			}
 
-			return { success: true };
-		} catch ( err: any ) {
-			return fail( 400, { error: err.message } );
+			return { success : true };
+		} catch ( err : any ) {
+			return fail( 400, { error : err.message } );
 		}
 	},
 
-	delete: async ( { request } ) => {
+	delete : async ( { request } ) => {
 		const formData = await request.formData();
 		const id       = formData.get( 'id' ) as string;
 
 		if ( !id ) {
-			return fail( 400, { error: 'Falta el ID del miembro.' } );
+			return fail( 400, { error : 'Falta el ID del miembro.' } );
 		}
 
 		try {
 			await deleteFamilyMember( id );
-
-			return { success: true };
-		} catch ( err: any ) {
-			return fail( 400, { error: err.message } );
+			return { success : true };
+		} catch ( err : any ) {
+			return fail( 400, { error : err.message } );
 		}
 	}
 };
