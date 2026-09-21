@@ -7,8 +7,7 @@
 		Trash2,
 		Phone,
 		Mail,
-		Landmark,
-		CreditCard
+		Landmark
 	}                               from '@lucide/svelte';
 
 	import type {
@@ -22,16 +21,16 @@
 		getFamilyRoleBadgeStyles
 	}                               from '../../../utils/constants.js';
 	import FamilyMemberRowForm      from './FamilyMemberRowForm.svelte';
-	import { formatRut }            from '$lib/utils/validation.js';
+	// import { formatRut }            from '$lib/utils/validation.js';
 
 	interface Props {
 		members    : FamilyMember[];
-		onEdit     : ( member: FamilyMember ) => void;
-		onDelete   : ( member: FamilyMember ) => void;
-		onAdd      : ( data: {
+		onEdit     : ( member : FamilyMember ) => void;
+		onDelete   : ( member : FamilyMember ) => void;
+		onAdd      : ( data : {
 			full_name         : string;
-			rut               : string;
-			email             : string;
+			rut?              : string;
+			email?            : string;
 			phone             : string;
 			organization      : CommunityOrganization;
 			is_representative : boolean;
@@ -46,7 +45,7 @@
 		onEdit,
 		onDelete,
 		onAdd,
-		isSaving = false,
+		isSaving  = false,
 		saveError = null
 	}: Props = $props();
 </script>
@@ -81,7 +80,7 @@
 										{ getFamilyRoleLabel( m.role ) }
 									</span>
 
-                                    {#if m.is_representative}
+									{#if m.is_representative}
 										<span class="inline-flex items-center text-[10px] font-bold text-accent bg-accent-muted px-1.5 py-0.2 rounded-md select-none">
 											Representante
 										</span>
@@ -111,19 +110,18 @@
 
 					<!-- Body: Detalles -->
 					<div class="space-y-2.5 text-xs border-t border-border/40 pt-3">
-						<div class="flex items-center gap-2 text-text-secondary">
+						<!-- RUT comentado: ya no se solicita -->
+						<!-- <div class="flex items-center gap-2 text-text-secondary">
 							<CreditCard size={ 14 } class="text-text-muted shrink-0" />
 							<span class="font-semibold w-14 text-text-muted">RUT:</span>
 							<span class="font-mono text-text-primary">{ formatRut( m.rut ) }</span>
-						</div>
+						</div> -->
 
-						{#if m.email}
-							<div class="flex items-center gap-2 text-text-secondary">
-								<Mail size={ 14 } class="text-text-muted shrink-0" />
-								<span class="font-semibold w-14 text-text-muted">Email:</span>
-								<span class="text-text-primary truncate" title={ m.email }>{ m.email }</span>
-							</div>
-						{/if}
+						<div class="flex items-center gap-2 text-text-secondary">
+							<Mail size={ 14 } class="text-text-muted shrink-0" />
+							<span class="font-semibold w-14 text-text-muted">Email:</span>
+							<span class="text-text-primary truncate" title={ m.email || '—' }>{ m.email || '—' }</span>
+						</div>
 
 						<div class="flex items-center gap-2 text-text-secondary">
 							<Phone size={ 14 } class="text-text-muted shrink-0" />
@@ -144,8 +142,8 @@
 		</div>
 	{/if}
 
-	<!-- Formulario en línea al final de la página (estilo Fila de Tabla) -->
-	<div class="card p-5 bg-linear-to-b from-bg-surface to-bg-surface-2 border border-border/60 rounded-2xl">
+	<!-- Formulario en línea al final de la página (estilo Fila de Tabla, visible en >= md) -->
+	<div class="hidden lg:block card p-5 bg-linear-to-b from-bg-surface to-bg-surface-2 border border-border/60 rounded-2xl">
 		<h3 class="text-sm font-bold text-text-primary mb-4 flex items-center gap-2 select-none">
 			<Users size={ 16 } class="text-accent" />
 			Agregar Nuevo Miembro
@@ -156,7 +154,8 @@
 				<thead>
 					<tr class="border-b border-border bg-bg-surface-2/50 select-none">
 						<th class="text-left px-4 py-2 text-xs font-semibold uppercase tracking-wider text-text-secondary/80 w-1/4">Nombre</th>
-						<th class="text-left px-4 py-2 text-xs font-semibold uppercase tracking-wider text-text-secondary/80 w-1/6">RUT</th>
+						<!-- RUT comentado: ya no se solicita -->
+						<!-- <th class="text-left px-4 py-2 text-xs font-semibold uppercase tracking-wider text-text-secondary/80 w-1/6">RUT</th> -->
 						<th class="text-left px-4 py-2 text-xs font-semibold uppercase tracking-wider text-text-secondary/80 w-1/6">Contacto</th>
 						<th class="text-left px-4 py-2 text-xs font-semibold uppercase tracking-wider text-text-secondary/80 w-1/6">Organización</th>
 						<th class="text-left px-4 py-2 text-xs font-semibold uppercase tracking-wider text-text-secondary/80 w-1/12">Rol</th>
@@ -169,7 +168,7 @@
 
 					{#if saveError}
 						<tr class="bg-red-500/5 select-none">
-							<td colspan="7" class="px-4 py-2 text-sm text-red-500 text-right font-medium">
+							<td colspan="6" class="px-4 py-2 text-sm text-red-500 text-right font-medium">
 								{ saveError }
 							</td>
 						</tr>
