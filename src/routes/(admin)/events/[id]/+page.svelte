@@ -1,22 +1,28 @@
 <script lang="ts">
-	import { page }             from '$app/state';
-	import { goto, invalidate } from '$app/navigation';
-	import { deserialize }      from '$app/forms';
+	import { invalidate }   from '$app/navigation';
+	import { deserialize }  from '$app/forms';
 
-	import { Pencil, CalendarDays, Users, Plus, ShoppingBag } from '@lucide/svelte';
+	import {
+		Pencil,
+		CalendarDays,
+		Users,
+		Plus,
+		ShoppingBag,
+		Check
+	}                                   from '@lucide/svelte';
+	import { Checkbox as BitsCheckbox } from 'bits-ui';
 
 	import type {
 		EventConfig,
 		FamilyEvent,
 		Order,
-		Family
+		ExistingFamilyLookup
 	}                                           from '$lib/types/index.js';
 	import TicketVerse                          from '$lib/components/tickets/TicketVerse.svelte';
 	import StatusBadge                          from '$lib/components/ui/StatusBadge.svelte';
 	import Button                               from '$lib/components/ui/Button.svelte';
 	import Modal                                from '$lib/components/ui/Modal.svelte';
 	import ButtonBack                           from '$lib/components/ui/ButtonBack.svelte';
-	import Pagination                           from '$lib/components/shared/Pagination.svelte';
 	import SearchInput                          from '$lib/components/ui/SearchInput.svelte';
 	import { isEventExpired, hasEventStarted }  from '$lib/utils/date.js';
 
@@ -28,21 +34,20 @@
 
 	interface Props {
 		data : {
-			event         : EventDetail;
-			families      : Family[];
-			familiesCount : number;
-			isSuperAdmin  : boolean;
+			event             : EventDetail;
+			availableFamilies : ExistingFamilyLookup[];
+			isSuperAdmin      : boolean;
 		};
 	}
 
 
-	let { data }: Props  = $props();
-	let search           = $state( '' );
-	let addModalOpen     = $state( false );
-	let isAdding         = $state( false );
-	let selectedFamilyId = $state<string | null>( null );
-	let modalSearch      = $state( page.url.searchParams.get( 'search' ) || '' );
-	let addError         = $state<string | null>( null );
+	let { data } : Props    = $props();
+	let search              = $state( '' );
+	let addModalOpen        = $state( false );
+	let isAdding            = $state( false );
+	let selectedFamilyIds   = $state<string[]>( [] );
+	let modalSearch         = $state( '' );
+	let addError            = $state<string | null>( null );
 
 
     const isExpired     = $derived( data.event.expires_at ? isEventExpired( data.event.expires_at ) : false );
@@ -72,35 +77,42 @@
 	}
 
 
-	function handleModalSearch( query? : string ) : void {
-		const targetQuery  = query !== undefined ? query : modalSearch;
-		const currentParam = page.url.searchParams.get( 'search' ) || '';
-		const trimmedQuery = targetQuery.trim();
-
-		if ( trimmedQuery === currentParam ) {
-			return;
+	const modalFilteredFamilies = $derived.by( () => {
+		if ( !modalSearch.trim() ) {
+			return data.availableFamilies;
 		}
 
-		const url = new URL( page.url );
+		const term = modalSearch.toLowerCase().trim();
+		return data.availableFamilies.filter( ( f ) =>
+			f.family_name.toLowerCase().includes( term ) ||
+			String( f.code ).includes( term )
+		);
+	} );
 
-		if ( trimmedQuery ) {
-			url.searchParams.set( 'search', trimmedQuery );
+
+	function toggleFamilySelection( familyId : string ) : void {
+		if ( selectedFamilyIds.includes( familyId ) ) {
+			selectedFamilyIds = selectedFamilyIds.filter( ( id ) => id !== familyId );
 		} else {
-			url.searchParams.delete( 'search' );
+			selectedFamilyIds = [ ...selectedFamilyIds, familyId ];
 		}
-
-		url.searchParams.set( 'page', '1' );
-
-		goto( url.pathname + url.search, {
-			keepFocus    : true,
-			replaceState : true
-		});
 	}
 
+	function selectAllVisible() : void {
+		const newIds = new Set( selectedFamilyIds );
+		for ( const f of modalFilteredFamilies ) {
+			newIds.add( f.id );
+		}
+		selectedFamilyIds = Array.from( newIds );
+	}
 
-	async function confirmAdd(): Promise<void> {
-		if ( !selectedFamilyId ) {
-			addError = 'Por favor selecciona una familia';
+	function clearAllSelection() : void {
+		selectedFamilyIds = [];
+	}
+
+	async function confirmAdd() : Promise<void> {
+		if ( selectedFamilyIds.length === 0 ) {
+			addError = 'Por favor selecciona al menos una familia';
 			return;
 		}
 
@@ -108,7 +120,9 @@
 		addError = null;
 
 		const formData = new FormData();
-		formData.append( 'familyId', selectedFamilyId );
+		for ( const famId of selectedFamilyIds ) {
+			formData.append( 'familyIds', famId );
+		}
 
 		try {
 			const response = await fetch( '?/addFamily', {
@@ -120,14 +134,15 @@
 
 			if ( result.type === 'success' ) {
 				await invalidate( 'app:event' );
-				addModalOpen     = false;
-				selectedFamilyId = null;
+				addModalOpen      = false;
+				selectedFamilyIds = [];
+				modalSearch       = '';
 			} else if ( result.type === 'failure' ) {
-				addError = ( result.data as any )?.error || 'Error al asociar familia';
+				addError = ( result.data as any )?.error || 'Error al asociar familias';
 			} else {
 				addError = 'Ocurrió un error inesperado';
 			}
-		} catch ( err: any ) {
+		} catch ( err : any ) {
 			addError = err.message;
 		} finally {
 			isAdding = false;
@@ -272,9 +287,9 @@
 				</div>
 
 				{#if !isExpired}
-					<Button variant="secondary" onclick={ () => { addModalOpen = true; addError = null; selectedFamilyId = null; } }>
+					<Button variant="secondary" onclick={ () => { addModalOpen = true; addError = null; selectedFamilyIds = []; modalSearch = ''; } }>
 						<Plus size={ 16 } />
-						Asociar Familia
+						Asociar Familias
 					</Button>
 				{/if}
 			</div>
@@ -314,46 +329,92 @@
 <!-- Modal de Asociación -->
 <Modal
 	open={ addModalOpen }
-	onClose={ () => addModalOpen = false }
+	onClose={ () => { addModalOpen = false; selectedFamilyIds = []; } }
 	onConfirm={ confirmAdd }
-	title="Asociar Familia al Evento"
-	confirmLabel="Asociar"
+	title="Asociar Familias al Evento"
+	confirmLabel={ selectedFamilyIds.length > 1 ? `Asociar (${ selectedFamilyIds.length })` : 'Asociar' }
 	loading={ isAdding }
+	size="lg"
 >
 	<div class="space-y-4">
-		<p class="text-sm text-(--text-muted)">Selecciona una familia para asociarla a este evento. No se mostrarán familias que ya estén asociadas.</p>
+		<p class="text-sm text-(--text-muted)">
+			Selecciona una o más familias para asociarlas a este evento y generar sus códigos QR. No se muestran familias que ya estén asociadas.
+		</p>
 
 		<!-- Buscador dentro del modal -->
 		<SearchInput
 			bind:value={ modalSearch }
-			onSearch={ handleModalSearch }
-			placeholder="Buscar familia..."
+			placeholder="Buscar familia por nombre o código..."
 		/>
 
-		<!-- Listado de familias disponibles -->
-		<div class="max-h-60 overflow-y-auto border border-(--border) rounded-xl divide-y divide-(--border) bg-(--bg-surface-2)">
-			{#each data.families as family}
+		<!-- Barra de herramientas de selección rápida -->
+		<div class="flex items-center justify-between gap-2 text-xs pt-1">
+			<div class="flex items-center gap-2">
 				<button
 					type="button"
-					class="w-full text-left px-4 py-3 text-sm hover:bg-(--bg-surface) transition-colors flex items-center justify-between { selectedFamilyId === family.id ? 'bg-(--accent)/10 text-(--accent) font-semibold' : 'text-(--text-primary)' }"
-					onclick={ () => selectedFamilyId = family.id }
+					onclick={ selectAllVisible }
+					disabled={ modalFilteredFamilies.length === 0 }
+					class="px-2.5 py-1 rounded-lg border border-border bg-bg-surface-2 hover:border-accent/40 text-text-primary transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
 				>
-					<span>{ family.family_name }</span>
-					{#if selectedFamilyId === family.id}
-						<span class="text-xs font-bold uppercase">Seleccionado</span>
+					Seleccionar todas ({ modalFilteredFamilies.length })
+				</button>
+
+				{#if selectedFamilyIds.length > 0}
+					<button
+						type="button"
+						onclick={ clearAllSelection }
+						class="px-2.5 py-1 rounded-lg border border-border bg-bg-surface-2 hover:border-accent/40 text-text-muted hover:text-text-primary transition-colors cursor-pointer"
+					>
+						Deseleccionar todas
+					</button>
+				{/if}
+			</div>
+
+			<span class="text-text-secondary font-semibold">
+				{ selectedFamilyIds.length } { selectedFamilyIds.length === 1 ? 'familia seleccionada' : 'familias seleccionadas' }
+			</span>
+		</div>
+
+		<!-- Listado de familias disponibles sin paginador con scroll fluido -->
+		<div class="max-h-72 overflow-y-auto border border-border rounded-xl divide-y divide-border/60 bg-bg-surface-2">
+			{#each modalFilteredFamilies as family (family.id)}
+				{@const isSelected = selectedFamilyIds.includes( family.id )}
+				<button
+					type="button"
+					class="w-full text-left px-4 py-3 text-sm hover:bg-bg-surface transition-colors flex items-center justify-between cursor-pointer select-none { isSelected ? 'bg-accent/10 text-accent font-semibold' : 'text-text-primary' }"
+					onclick={ () => toggleFamilySelection( family.id ) }
+				>
+					<div class="flex items-center gap-3 min-w-0">
+						<BitsCheckbox.Root
+							checked={ isSelected }
+							onclick={ ( e ) => e.stopPropagation() }
+							onCheckedChange={ () => toggleFamilySelection( family.id ) }
+							class="w-5 h-5 min-w-5 min-h-5 rounded-md border flex items-center justify-center transition-all duration-200 cursor-pointer { isSelected ? 'bg-accent border-accent text-accent-text' : 'bg-bg-surface border-border hover:border-accent/40' }"
+						>
+							{#snippet children( { checked } )}
+								{#if checked}
+									<div class="text-accent-text">
+										<Check size={ 13 } strokeWidth={ 3 } />
+									</div>
+								{/if}
+							{/snippet}
+						</BitsCheckbox.Root>
+
+						<span class="truncate">{ family.family_name }</span>
+					</div>
+
+					{#if isSelected}
+						<span class="text-[11px] font-bold uppercase tracking-wider text-accent shrink-0">Seleccionado</span>
+					{:else if family.code}
+						<span class="text-xs text-text-muted font-mono shrink-0">#{ family.code }</span>
 					{/if}
 				</button>
 			{:else}
-				<p class="p-4 text-center text-sm text-(--text-muted)">No hay familias disponibles.</p>
+				<p class="p-6 text-center text-sm text-text-muted">
+					{ modalSearch ? 'No se encontraron familias que coincidan con la búsqueda.' : 'No hay familias disponibles para asociar.' }
+				</p>
 			{/each}
 		</div>
-
-		<!-- Paginación dentro del modal -->
-		{#if data.familiesCount > 0}
-			<div class="pt-2">
-				<Pagination count={ data.familiesCount } />
-			</div>
-		{/if}
 
 		{#if addError}
 			<p class="text-red-500 text-sm font-medium">{ addError }</p>
