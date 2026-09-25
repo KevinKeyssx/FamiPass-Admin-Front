@@ -209,7 +209,11 @@ export async function deleteEvent( id: string ): Promise<void> {
 }
 
 
-export async function addFamilyToEvent( eventId: string, familyId: string ): Promise<void> {
+export async function addFamiliesToEvent( eventId: string, familyIds: string[] ): Promise<void> {
+	if ( familyIds.length === 0 ) {
+		return;
+	}
+
 	const event = await getEventById( eventId );
 
 	if ( !event ) {
@@ -220,16 +224,22 @@ export async function addFamilyToEvent( eventId: string, familyId: string ): Pro
 		throw new Error( 'El evento ha expirado y no se pueden asociar familias.' );
 	}
 
+	const toInsert = familyIds.map( ( familyId ) => ({
+		event_id  : eventId,
+		family_id : familyId
+	}) );
+
 	const { error } = await supabaseServer
 		.from( 'family_events' )
-		.insert({
-			event_id    : eventId,
-			family_id   : familyId,
-		});
+		.insert( toInsert );
 
 	if ( error ) {
 		throw new Error( error.message );
 	}
+}
+
+export async function addFamilyToEvent( eventId: string, familyId: string ): Promise<void> {
+	await addFamiliesToEvent( eventId, [ familyId ] );
 }
 
 
