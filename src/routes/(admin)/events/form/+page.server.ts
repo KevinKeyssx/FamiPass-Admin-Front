@@ -110,23 +110,50 @@ export const actions: Actions = {
 			return fail( 400, { error: 'La fecha límite de registro es requerida.' } );
 		}
 
-		let productItems: Array<{ product_id: string; quantity: number }> = [];
+		let productItems : Array<{
+			product_id    : string;
+			quantity      : number;
+			max_quantity? : number | null;
+			stock?        : number | null;
+		}> = [];
 
-        if ( productsJson ) {
+		if ( productsJson ) {
 			try {
 				productItems = JSON.parse( productsJson );
 			} catch {
-				return fail( 400, { error: 'Formato de productos inválido.' } );
+				return fail( 400, { error : 'Formato de productos inválido.' } );
 			}
 		}
 
 		if ( !productItems || productItems.length === 0 ) {
-			return fail( 400, { error: 'Debes asociar al menos un producto al evento.' } );
+			return fail( 400, { error : 'Debes asociar al menos un producto al evento.' } );
 		}
 
 		for ( const item of productItems ) {
 			if ( !item.product_id || typeof item.quantity !== 'number' || item.quantity < 1 ) {
-				return fail( 400, { error: 'Todos los productos asociados deben tener una cantidad válida mayor o igual a 1.' } );
+				return fail( 400, { error : 'Todos los productos asociados deben tener una cantidad por persona válida mayor o igual a 1.' } );
+			}
+
+			if ( item.max_quantity !== undefined && item.max_quantity !== null ) {
+				item.max_quantity = Number( item.max_quantity );
+				if ( isNaN( item.max_quantity ) || item.max_quantity < 0 ) {
+					return fail( 400, { error : 'La cantidad máxima de cada producto debe ser un número mayor o igual a 0.' } );
+				}
+			} else {
+				item.max_quantity = null;
+			}
+
+			if ( item.stock !== undefined && item.stock !== null ) {
+				item.stock = Number( item.stock );
+				if ( isNaN( item.stock ) || item.stock < 0 ) {
+					return fail( 400, { error : 'El stock de cada producto debe ser un número mayor o igual a 0.' } );
+				}
+			} else {
+				item.stock = null;
+			}
+
+			if ( item.max_quantity !== null && item.stock !== null && item.stock > item.max_quantity ) {
+				return fail( 400, { error : 'El stock de un producto no puede ser mayor que su cantidad máxima.' } );
 			}
 		}
 

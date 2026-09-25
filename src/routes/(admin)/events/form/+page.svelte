@@ -44,9 +44,11 @@
 	}
 
 	interface SelectedProductItem {
-		product_id : string;
-		name       : string;
-		quantity   : number;
+		product_id   : string;
+		name         : string;
+		quantity     : number;
+		max_quantity : number | null;
+		stock        : number | null;
 	}
 
 	// svelte-ignore state_referenced_locally
@@ -65,9 +67,11 @@
 	// svelte-ignore state_referenced_locally
 	let selectedProducts = $state<SelectedProductItem[]>(
 		( data.event?.event_products ?? [] ).map( ( ep ) => ({
-			product_id : ep.product_id,
-			name       : ep.product?.name ?? 'Producto',
-			quantity   : ep.quantity
+			product_id   : ep.product_id,
+			name         : ep.product?.name ?? 'Producto',
+			quantity     : ep.quantity,
+			max_quantity : ep.max_quantity ?? null,
+			stock        : ep.stock ?? null
 		}) )
 	);
 
@@ -127,9 +131,11 @@
 		if ( !found ) return;
 
 		selectedProducts.push({
-			product_id : found.id,
-			name       : found.name,
-			quantity   : 1
+			product_id   : found.id,
+			name         : found.name,
+			quantity     : 1,
+			max_quantity : null,
+			stock        : null
 		});
 		productToAdd  = '';
 		productsError = null;
@@ -229,6 +235,18 @@
 				productsError = 'La cantidad de cada producto debe ser al menos 1.';
 				hasError = true;
 			}
+
+			const hasStockExceedingMax = selectedProducts.some( ( p ) =>
+				p.max_quantity !== null &&
+				p.stock !== null &&
+				p.stock !== undefined &&
+				p.max_quantity !== undefined &&
+				p.stock > p.max_quantity
+			);
+			if ( hasStockExceedingMax ) {
+				productsError = 'El stock actual no puede ser mayor que la cantidad máxima total permitida.';
+				hasError = true;
+			}
 		}
 
 		if ( hasError ) return;
@@ -245,8 +263,10 @@
 		formData.append( 'detect_by_minors', String( form.detect_by_minors ) );
 		formData.append( 'require_guest_verification', String( form.require_guest_verification ) );
 		formData.append( 'products', JSON.stringify( selectedProducts.map( ( p ) => ({
-			product_id : p.product_id,
-			quantity   : p.quantity
+			product_id   : p.product_id,
+			quantity     : p.quantity,
+			max_quantity : p.max_quantity ?? null,
+			stock        : p.stock ?? null
 		}) ) ) );
 
 		if ( form.max_family_members != null ) {
@@ -503,41 +523,63 @@
 					<p class="text-xs">Selecciona un producto del catálogo para asociarlo.</p>
 				</div>
 			{:else}
-				<div class="space-y-2.5">
+				<div class="space-y-3">
 					{#each selectedProducts as prod, idx ( prod.product_id )}
-						<div class="flex items-center justify-between gap-3 p-3 rounded-xl bg-bg-surface-2 border border-border/40 transition-all hover:border-border">
-							<div class="flex items-center gap-3 min-w-0 flex-1">
-								<div class="w-8 h-8 rounded-lg bg-accent/10 border border-accent/20 flex items-center justify-center text-accent shrink-0 font-bold text-xs">
-									{ idx + 1 }
-								</div>
-								<div class="truncate">
-									<p class="text-sm font-semibold text-text-primary truncate">{ prod.name }</p>
-									<p class="text-xs text-text-secondary">Cantidad por entrega</p>
-								</div>
-							</div>
-
-							<div class="flex items-center gap-3 shrink-0">
-								<div class="w-28 sm:w-32">
-									<InputNumber
-										min={ 1 }
-										step={ 1 }
-										required={ true }
-										bind:value={ prod.quantity }
-										disabled={ isFieldDisabled( 'products' ) }
-									/>
+						<div class="p-3.5 sm:p-4 rounded-xl bg-bg-surface-2 border border-border/40 transition-all hover:border-border space-y-3">
+							<div class="flex items-center justify-between gap-3">
+								<div class="flex items-center gap-3 min-w-0">
+									<div class="w-8 h-8 rounded-lg bg-accent/10 border border-accent/20 flex items-center justify-center text-accent shrink-0 font-bold text-xs">
+										{ idx + 1 }
+									</div>
+									<div class="truncate">
+										<p class="text-sm font-semibold text-text-primary truncate">{ prod.name }</p>
+									</div>
 								</div>
 
 								<button
 									type="button"
 									onclick={ () => handleRemoveProduct( prod.product_id ) }
 									disabled={ isFieldDisabled( 'products' ) }
-									class="p-2 rounded-lg text-red-500 hover:bg-red-500/10 border border-transparent hover:border-red-500/20 transition-all cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
+									class="p-2 rounded-lg text-red-500 hover:bg-red-500/10 border border-transparent hover:border-red-500/20 transition-all cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed shrink-0"
 									title="Eliminar producto"
 									aria-label="Eliminar producto"
 								>
 									<Trash2 size={ 16 } />
 								</button>
 							</div>
+
+							<div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+								<InputNumber
+									label="Por persona"
+									min={ 1 }
+									step={ 1 }
+									required={ true }
+									bind:value={ prod.quantity }
+									disabled={ isFieldDisabled( 'products' ) }
+								/>
+
+								<InputNumber
+									label="Máx. total"
+									min={ 0 }
+									step={ 1 }
+									placeholder="Sin límite"
+									bind:value={ prod.max_quantity }
+									disabled={ isFieldDisabled( 'products' ) }
+								/>
+
+								<InputNumber
+									label="Stock actual"
+									min={ 0 }
+									step={ 1 }
+									placeholder="Opcional"
+									bind:value={ prod.stock }
+									disabled={ isFieldDisabled( 'products' ) }
+								/>
+							</div>
+
+							{#if prod.max_quantity !== null && prod.max_quantity !== undefined && prod.stock !== null && prod.stock !== undefined && prod.stock > prod.max_quantity}
+								<p class="text-xs text-red-500 font-medium">El stock actual ({ prod.stock }) no puede superar el límite máximo ({ prod.max_quantity }).</p>
+							{/if}
 						</div>
 					{/each}
 				</div>

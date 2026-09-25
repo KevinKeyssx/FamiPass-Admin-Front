@@ -100,7 +100,12 @@ export async function getEventById( id: string ): Promise<EventConfig | null> {
 
 export async function syncEventProducts(
 	eventId : string,
-	items   : Array<{ product_id: string; quantity: number }>
+	items   : Array<{
+		product_id    : string;
+		quantity      : number;
+		max_quantity? : number | null;
+		stock?        : number | null;
+	}>
 ): Promise<void> {
 	const { error: deleteError } = await supabaseServer
 		.from( 'event_products' )
@@ -116,10 +121,12 @@ export async function syncEventProducts(
 	}
 
 	const toInsert = items.map( ( item ) => ({
-		event_id   : eventId,
-		product_id : item.product_id,
-		quantity   : item.quantity,
-		status     : 'AVAILABLE'
+		event_id     : eventId,
+		product_id   : item.product_id,
+		quantity     : item.quantity,
+		max_quantity : item.max_quantity ?? null,
+		stock        : item.stock ?? null,
+		status       : 'AVAILABLE'
 	}) );
 
 	const { error: insertError } = await supabaseServer
