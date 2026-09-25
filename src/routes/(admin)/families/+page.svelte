@@ -3,6 +3,8 @@
 	import { page }             from '$app/state';
 	import { goto, invalidate } from '$app/navigation';
 
+    import { FileSpreadsheet } from '@lucide/svelte';
+
 	import type { Family } from '$lib/types/index.js';
 	import ViewSwitcher    from '$lib/components/shared/ViewSwitcher.svelte';
 	import Pagination      from '$lib/components/shared/Pagination.svelte';
@@ -13,12 +15,14 @@
 	import SearchInput     from '$lib/components/ui/SearchInput.svelte';
 	import ButtonCreate    from '$lib/components/ui/ButtonCreate.svelte';
 
+
 	interface Props {
 		data : {
 			families : Family[];
 			count    : number;
 		};
 	}
+
 
 	let { data } : Props = $props();
 
@@ -37,7 +41,7 @@
 		open : false,
 		id   : null,
 		name : ''
-	} );
+	});
 
 
 	function handleSearch( query? : string ) : void {
@@ -62,7 +66,7 @@
 		goto( url.pathname + url.search, {
 			keepFocus    : true,
 			replaceState : true
-		} );
+		});
 	}
 
 	function clearFilters(): void {
@@ -146,6 +150,14 @@
 
 		<div class="flex items-center justify-between sm:justify-end gap-2.5 relative z-10 shrink-0 w-full sm:w-auto">
 			<ViewSwitcher />
+
+			<a
+				href="/families/import"
+				class="inline-flex items-center gap-2 px-3.5 py-2.5 rounded-xl text-xs font-semibold border border-border/80 hover:border-accent/40 bg-bg-surface-2 hover:bg-accent-muted/20 text-text-primary transition-all duration-300 focus-ring cursor-pointer shrink-0"
+			>
+				<FileSpreadsheet size={ 15 } class="text-accent shrink-0" />
+				<span>Importar Excel</span>
+			</a>
 
 			<ButtonCreate href="/families/form" label="Familia" prefix="Nueva" />
 		</div>
